@@ -103,7 +103,6 @@ def run_KNN(trainData, trainTarget, sampleData, sampleTarget, K):
 def solve_KNN():
     #load data
     trainData, trainTarget, validData, validTarget, testData, testTarget = load_data()
-
     #define our placeholders
     K = tf.placeholder(tf.int32, name = "K")
     trainX = tf.placeholder(tf.float32, [None, 1], name = "trainX")
