@@ -159,7 +159,7 @@ def solve_KNN():
 if __name__ == '__main__':
     #serves no other purpose other than to provide spacing from cpu compilation
     #suggestion messages that pop up
-    print('\n\n\n\n\nAssignment 1: KNN Regression\n\n')
+    print('\n\n\n\n\n---------Assignment 1: KNN Regression---------\n\n')
 
     #run the program
     solve_KNN()
