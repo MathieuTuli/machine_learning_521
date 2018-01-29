@@ -1,6 +1,4 @@
-#______AUTHOR 1: MATHIEU TULI______
-#______AUTHOR 2: ______
-#______AUTHOR 3: ______
+#______ECE521 Assignment 1______
 #______STARTDATE: Jan. 20, 2018______
 #______DUE: Feb. 2, 2018______
 
@@ -50,23 +48,24 @@ def training_responsibilities(distMatrix, K, testPointIndex = None):
     neighbours, neighboursIndices = tf.nn.top_k(-distMatrix,k = K)
 
     #make a vector of size 1xnumTrainingData, to represent possible the possible
-    #indicies from distMatrix. Reshape it to make it a 1x1xN2 matrix. Need
+    #indicies from distMatrix. Reshape it to make it a N2x1x1 matrix. Need
     #these dimensions for broadcasting purposes
     possibleIndices = tf.range(numTrainData)
-    possibleIndices = tf.reshape(possibleIndices, [1,1,-1])
+    possibleIndices = tf.reshape(possibleIndices, [-1,1,1])
 
     #next, we want to compare our neighboursIndices matrix with our possibleIndices
-    #matrix. So, we expand in the 2 dimension to get a N1xKx1 matrix where K1
+    #matrix. So, we expand in the 0 dimension to get a 1xN1xK matrix where K1
     #is the number of rows in distMatrix. This is the dimension necessary for
     #broadcasting
-    neighboursIndices = tf.expand_dims(neighboursIndices, 2)
+    neighboursIndices = tf.expand_dims(neighboursIndices, 0)
 
     #finally, we want to compare our possibleIndices with neighboursIndices.
     #broadcasting will take care of dimensions and then we reduce accros the 1
-    #axis. Thus our N1xKx1 matrix compares to our 1x1xN2 matrix and we get back
-    #an N1xN2 matrix. This matrix is return as True/False values, so we convert
-    #those to floating numbers.
-    kNearest = tf.reduce_sum(tf.to_float(tf.equal(neighboursIndices, possibleIndices)),1)
+    #axis. Thus our N2x1x1 matrix compares to our 1xN1xK matrix and we get back
+    #an N2xN1 matrix when we reduce accross the 1 axis, or K. This matrix returns
+    #as True/False values, so we convert those to floating numbers. Then take
+    #the transpose to get N1xN2
+    kNearest = tf.transpose(tf.reduce_sum(tf.to_float(tf.equal(neighboursIndices, possibleIndices)),2))
 
     #since we now have a N1xN2 matric with either 0 or 1 as elemental values,
     #we return that matrix divided by K since responsibiliies will have a 1/k
@@ -117,10 +116,15 @@ def solve_KNN():
     possibleK = [1,3,5,50]
 
     #compute the MSE loss for each possible k
+    trainingError = []
     validationError = []
     testError = []
 
     for currK in possibleK:
+        trainingErrorTemp = sess.run(run_KNN(trainX, trainY, trainX, trainY, K), \
+            feed_dict={trainX:trainData, trainY:trainTarget, K:currK})
+        trainingError.append(trainingErrorTemp)
+
         validationErrorTemp = sess.run(run_KNN(trainX, trainY, newX, newY, K), \
             feed_dict={trainX:trainData, trainY:trainTarget, newX:validData, \
             newY:validTarget, K:currK})
@@ -131,8 +135,9 @@ def solve_KNN():
             newY:testTarget, K:currK})
         testError.append(testErrorTemp)
 
-        print("\n\nwith K = %d, validation MSE loss is %f, and test MSE loss "\
-        "is %f." % (currK, validationErrorTemp, testErrorTemp))
+        print("\n\nwith K = %d, the training MSE loss is %f, "
+        "validation MSE loss is %f, and test MSE loss is %f." % (currK, \
+        trainingErrorTemp, validationErrorTemp, testErrorTemp))
 
     #get the index of the minimum validator error and use that to get the
     #corresponding best K
@@ -152,6 +157,11 @@ def solve_KNN():
     return
 
 if __name__ == '__main__':
+    #serves no other purpose other than to provide spacing from cpu compilation
+    #suggestion messages that pop up
+    print('\n\n\n\n\nAssignment 1: KNN Regression\n\n')
+
+    #run the program
     solve_KNN()
 
 #----------Question: 3---------------------------------------------------------
