@@ -139,6 +139,17 @@ def solve_KNN():
     #corresponding best K
     bestK = possibleK[validationError.index(min(validationError))]
     print('\n\nBest K: ', bestK)
+
+    # plotPrediction, plotMSE = sess.run(run_KNN(trainX, \
+    #     trainY, newX, newY, K), feed_dict={trainX:trainData, trainY:trainTarget, \
+    #     newX:X, newY:validTarget, K:currK})
+    #
+    # plt.figure(currK + 1)
+    # plot.plot(trainData, trainTarget, '.')
+    # plt.plot(X, plotPrediction, '-')
+    # plt.title("KNN regression on data1D, where K = %d"%currK)
+    # plot.show()
+
     return
 
 if __name__ == '__main__':
