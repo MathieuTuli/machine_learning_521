@@ -31,9 +31,9 @@ def eucl_dist(X,Z):
     return tf.reduce_sum((XExpanded-ZExpanded)**2, 1)
 
 sess = tf.Session()
-x = tf.constant([[1,2,1,2,2],[3,4,1,2,2]])
-z = tf.constant([[11,22,1,23,32],[13,14,1,22,12],[2,3,4,5,6]])
-print(sess.run(eucl_dist(x,z)))
+# x = tf.constant([[1,2,1,2,2],[3,4,1,2,2]])
+# z = tf.constant([[11,22,1,23,32],[13,14,1,22,12],[2,3,4,5,6]])
+# print(sess.run(eucl_dist(x,z)))
 
 #----------Question: 2---------------------------------------------------------
 #randomly generated training and test data sets
