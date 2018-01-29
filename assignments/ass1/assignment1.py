@@ -38,19 +38,19 @@ def load_data():
     return trainData, trainTarget, validData, validTarget, testData, testTarget
 
 def training_responsibilities(distMatrix, K, testPointIndex = None):
-    #get the dimension of possible neighbours. Note distMatrix is N1xN2
-    numTrainData = tf.shape(distMatrix)[1]
-
     #find the k nearest neighbours (and their indices) in each row, where a row
     #represents a different data point. Take the -ve of the matrix since the
     #smaller the value the closer it is, bigger +ve numbers become smaller -ve
     #numbers
     neighbours, neighboursIndices = tf.nn.top_k(-distMatrix,k = K)
 
+    #get the dimension of possible neighbours. Note distMatrix is N1xN2
+    possibleNeighbours = tf.shape(distMatrix)[1]
+
     #make a vector of size 1xnumTrainingData, to represent possible the possible
     #indicies from distMatrix. Reshape it to make it a N2x1x1 matrix. Need
     #these dimensions for broadcasting purposes
-    possibleIndices = tf.range(numTrainData)
+    possibleIndices = tf.range(possibleNeighbours)
     possibleIndices = tf.reshape(possibleIndices, [-1,1,1])
 
     #next, we want to compare our neighboursIndices matrix with our possibleIndices
