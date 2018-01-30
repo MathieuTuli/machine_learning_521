@@ -142,7 +142,7 @@ def solve_KNN():
     #get the index of the minimum validator error and use that to get the
     #corresponding best K
     bestK = possibleK[validationError.index(min(validationError))]
-    print('\n\nBest K: ', bestK)
+    print('\n\nBest K: ', bestK, '\n\n')
 
     # plotPrediction, plotMSE = sess.run(run_KNN(trainX, \
     #     trainY, newX, newY, K), feed_dict={trainX:trainData, trainY:trainTarget, \
@@ -194,7 +194,7 @@ def classification_prediction(trainData, trainTarget, sampleData, sampleTarget, 
     #this row most seems to resemble. aggregate the results for each row and
     #at the very end, classify based on the majority class that showed up
     #in the aggregate result
-    print(tf.shape(testDistance).to_list()) #.as_list()[0])
+    print(testDistance.shape[0]) #.as_list()[0])
     # for i in range(testDistance.get_shape().as_list()[0]):
     #     #iteratively grab a new row
     #     currentRow = tf.gather(testDistance, i)
