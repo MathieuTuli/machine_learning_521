@@ -1,1 +1,1 @@
-checking to see if bat file works 
+no reall change. Still need to figure out how to get matplotlib working properly as well as how to iterate over the rows of testDistance for part 3 

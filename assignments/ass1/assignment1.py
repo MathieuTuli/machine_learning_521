@@ -5,7 +5,7 @@
 from __future__ import print_function
 import numpy as np
 import tensorflow as tf
-import matplotlib.pylab as plt
+# import matplotlib.pylab as plt
 
 #----------Question: 1---------------------------------------------------------
 
@@ -195,25 +195,24 @@ def classification_prediction(trainData, trainTarget, sampleData, sampleTarget, 
     #this row most seems to resemble. aggregate the results for each row and
     #at the very end, classify based on the majority class that showed up
     #in the aggregate result
-    print(testDistance.shape[0]) #.as_list()[0])
-    # for i in range(testDistance.get_shape().as_list()[0]):
-    #     #iteratively grab a new row
-    #     currentRow = tf.gather(testDistance, i)
-    #
-    #     #find the k nearest neighbours (and their indices) in each row, where a row
-    #     #represents a different data point. Take the -ve of the matrix since the
-    #     #smaller the value the closer it is, bigger +ve numbers become smaller -ve
-    #     #numbers
-    #     neighbours, neighboursIndices = tf.nn.top_k(-currentRow,k = K)
-    #
-    #     #from nereast neighbours, gather the corresponding rows
-    #     possibleClassificationsVec = tf.gather(trainTarget,neighboursIndices)
-    #
-    #     #run unique_with_counts to find majority classification
-    #     y, idx, count = tf.unique_with_counts(possibleClassificationsVec)
-    #
-    #     #append the majority class from the current row
-    #     majority.append(tf.argmax(count))
+    for i in range(-1):
+        #iteratively grab a new row
+        currentRow = tf.gather(testDistance, i)
+
+        #find the k nearest neighbours (and their indices) in each row, where a row
+        #represents a different data point. Take the -ve of the matrix since the
+        #smaller the value the closer it is, bigger +ve numbers become smaller -ve
+        #numbers
+        neighbours, neighboursIndices = tf.nn.top_k(-currentRow,k = K)
+
+        #from nereast neighbours, gather the corresponding rows
+        possibleClassificationsVec = tf.gather(trainTarget, neighboursIndices)
+
+        #run unique_with_counts to find majority classification
+        y, idx, count = tf.unique_with_counts(possibleClassificationsVec)
+
+        #append the majority class from the current row
+        majority.append(count)
 
     #return maajority which has predictions of each image per row
     return majority
@@ -250,7 +249,7 @@ def classify():
         trainY, newX, newY, K), feed_dict={trainX:trainData0, trainY:trainTarget0, \
         newX:validData0, newY:validTarget0, K:currK}))
 
-        print('\n\nclass: ',classifications)
+        print('\n\nclass: ', classifications)
 
     return
 
