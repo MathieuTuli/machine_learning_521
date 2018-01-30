@@ -184,38 +184,46 @@ def data_segmentation(data_path, target_path, task):
 
     return trainData, validData, testData, trainTarget, validTarget, testTarget
 
-def classification_prediction(trainData, trainTarget, sampleData, sampleTarget, K):
+def find_neighbours_matrix(trainData, sampleData, K):
     #compute the euclidean distance between test and training
     testDistance = eucl_dist(sampleData, trainData)
 
-    #defined to hold the majority class from each row of the image
-    majority = []
+    #find the k nearest neighbours (and their indices) in each row, where a row
+    #represents a different data point. Take the -ve of the matrix since the
+    #smaller the value the closer it is, bigger +ve numbers become smaller -ve
+    #numbers
+    neighbours, neighboursIndices = tf.nn.top_k(-testDistance,k = K)
 
+    return neighboursIndices
+
+def classification_prediction(trainTarget, K, neighboursIndices):
     #for each row, find the k nearest neighbours, and determine which class
     #this row most seems to resemble. aggregate the results for each row and
     #at the very end, classify based on the majority class that showed up
     #in the aggregate result
-    for i in range(-1):
+
+    #defined to hold the majority class from each row of the image
+    majority = []
+
+    for i in range(neighboursIndices.shape[0]):
         #iteratively grab a new row
-        currentRow = tf.gather(testDistance, i)
+        currentRow = tf.gather(neighboursIndices, i)
 
-        #find the k nearest neighbours (and their indices) in each row, where a row
-        #represents a different data point. Take the -ve of the matrix since the
-        #smaller the value the closer it is, bigger +ve numbers become smaller -ve
-        #numbers
-        neighbours, neighboursIndices = tf.nn.top_k(-currentRow,k = K)
-
-        #from nereast neighbours, gather the corresponding rows
-        possibleClassificationsVec = tf.gather(trainTarget, neighboursIndices)
+        #from nearest neighbours target vector, gather the corresponding rows
+        possibleClassificationsVec = tf.gather(trainTarget, currentRow)
 
         #run unique_with_counts to find majority classification
-        y, idx, count = tf.unique_with_counts(possibleClassificationsVec)
+        uniqueValues, idx, count = tf.unique_with_counts(possibleClassificationsVec)
+
+        #find the majority class
+        majorityValue =  tf.gather(uniqueValues, tf.argmax(count))
 
         #append the majority class from the current row
-        majority.append(count)
+        majority.append(majorityValue)
 
     #return maajority which has predictions of each image per row
     return majority
+
 
 def classify():
     #define our placeholders
@@ -233,7 +241,7 @@ def classify():
     trainData0, validData0, testData0, trainTarget0, validTarget0, testTarget0 = \
         data_segmentation("./data.npy", "./target.npy", 0)
 
-    # print(sess.run(tf.shape(trainTarget)),sess.run(tf.shape(validTarget)),sess.run(tf.shape(testTarget)))
+    # print(sess.run(tf.shape(trainData0)),sess.run(tf.shape(trainTarget0)),sess.run(tf.shape(validData0)))
     #run for gender ID. task = 1
     trainData1, validData1, testData1, trainTarget1, validTarget1, testTarget1 = \
         data_segmentation("./data.npy", "./target.npy", 1)
@@ -243,13 +251,19 @@ def classify():
     validationError = []
     testError = []
 
-    for currK in range(1):
-        classifications = []
-        classifications.append(sess.run(classification_prediction(trainX, \
-        trainY, newX, newY, K), feed_dict={trainX:trainData0, trainY:trainTarget0, \
-        newX:validData0, newY:validTarget0, K:currK}))
+    # for currK in range(1):
+    currK = 1
+    # classifications = []
 
-        print('\n\nclass: ', classifications)
+    # return a numpy matrix of closest neighbours indices
+    neighboursIndices = (sess.run(find_neighbours_matrix(trainX, \
+    newX, K), feed_dict={trainX:trainData0, newX:validData0, K:currK}))
+
+    # use this closest neighbours indices to return a predicted classification vector
+    classificationVector = sess.run(classification_prediction(trainY, K, neighboursIndices),\
+    feed_dict={trainY:trainTarget0, K:currK})
+
+    print('\n\nclass: ', classificationVector)
 
     return
 
@@ -258,8 +272,8 @@ if __name__ == '__main__':
     #suggestion messages that pop up
     print('\n\n\n\n\n---------Assignment 1: KNN Regression---------\n\n')
 
-    #part 1
-    solve_KNN()
+    #part 2
+    # solve_KNN()
 
     #part 3
     classify()
