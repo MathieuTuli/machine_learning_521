@@ -5,7 +5,7 @@
 from __future__ import print_function
 import numpy as np
 import tensorflow as tf
-# import matplotlib.pylab as plt
+import matplotlib.pylab as plt
 
 #----------Question: 1---------------------------------------------------------
 
