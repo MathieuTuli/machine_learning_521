@@ -5,7 +5,7 @@
 from __future__ import print_function
 import numpy as np
 import tensorflow as tf
-# import matplotlib.pylab as plt
+import matplotlib.pylab as plt
 
 #----------Question: 1---------------------------------------------------------
 
@@ -95,7 +95,7 @@ def run_KNN(trainData, trainTarget, sampleData, sampleTarget, K):
     #compute the MSE
     testMSE = MSE_loss(sampleTarget, testPrediction)
 
-    return testMSE
+    return testPrediction, testMSE
 
 def solve_KNN():
     #load data
@@ -109,6 +109,7 @@ def solve_KNN():
 
     #our input matrix
     X = np.linspace(0.0,11.0, num = 1000)[:,np.newaxis]
+    newTarget = np.sin(X) + 0.1 * np.power(X, 2) + 0.5 * np.random.randn(1000 , 1)
 
     #define possible Ks
     possibleK = [1,3,5,50]
@@ -118,20 +119,28 @@ def solve_KNN():
     validationError = []
     testError = []
 
+    plotPrediction = []
+
     for currK in possibleK:
-        trainingErrorTemp = sess.run(run_KNN(trainX, trainY, trainX, trainY, K), \
+        trainingErrorPrediction, trainingErrorTemp = sess.run(run_KNN(trainX, trainY, trainX, trainY, K), \
             feed_dict={trainX:trainData, trainY:trainTarget, K:currK})
         trainingError.append(trainingErrorTemp)
 
-        validationErrorTemp = sess.run(run_KNN(trainX, trainY, newX, newY, K), \
+        validationErrorPrediction, validationErrorTemp = sess.run(run_KNN(trainX, trainY, newX, newY, K), \
             feed_dict={trainX:trainData, trainY:trainTarget, newX:validData, \
             newY:validTarget, K:currK})
         validationError.append(validationErrorTemp)
 
-        testErrorTemp = sess.run(run_KNN(trainX, trainY, newX, newY, K), \
+        testErrorPrediction, testErrorTemp = sess.run(run_KNN(trainX, trainY, newX, newY, K), \
             feed_dict={trainX:trainData, trainY:trainTarget, newX:testData, \
             newY:testTarget, K:currK})
         testError.append(testErrorTemp)
+
+        # For Q2.2
+        plotPredictionTemp, plotMSETemp = sess.run(run_KNN(trainX, trainY, newX, newY, K), \
+        feed_dict={trainX:trainData, trainY:trainTarget, \
+        newX:X, newY:newTarget, K:currK})
+        plotPrediction.append(plotPredictionTemp)
 
         print("\nwith K = %d, the training MSE loss is %f, "
         "validation MSE loss is %f, and test MSE loss is %f." % (currK, \
@@ -142,15 +151,15 @@ def solve_KNN():
     bestK = possibleK[validationError.index(min(validationError))]
     print('\nBest K: ', bestK, '\n\n')
 
-    # plotPrediction, plotMSE = sess.run(run_KNN(trainX, \
-    #     trainY, newX, newY, K), feed_dict={trainX:trainData, trainY:trainTarget, \
-    #     newX:X, newY:validTarget, K:currK})
-    #
-    # plt.figure(currK + 1)
-    # plot.plot(trainData, trainTarget, '.')
-    # plt.plot(X, plotPrediction, '-')
-    # plt.title("KNN regression on data1D, where K = %d"%currK)
-    # plot.show()
+    plt.figure(currK + 1)
+    plt.plot(trainData, trainTarget, '.')
+    plt.plot(X, plotPrediction[0], '-', label=str(possibleK[0]))
+    plt.plot(X, plotPrediction[1], '-', label=str(possibleK[1]))
+    plt.plot(X, plotPrediction[2], '-', label=str(possibleK[2]))
+    plt.plot(X, plotPrediction[3], '-', label=str(possibleK[3]))
+    plt.legend(loc='best')
+    plt.title("KNN regression on data1D")
+    plt.show()
 
     return
 
@@ -314,3 +323,4 @@ if __name__ == '__main__':
     print('\n\n\n---------Part 3: Gender recognition---------\n\n')
     #part 3: pass in 0 as an argument to classify name and 1 for gender
     classify(1)
+
