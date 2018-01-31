@@ -5,7 +5,7 @@
 from __future__ import print_function
 import numpy as np
 import tensorflow as tf
-import matplotlib.pylab as plt
+# import matplotlib.pylab as plt
 
 #----------Question: 1---------------------------------------------------------
 
@@ -196,7 +196,7 @@ def find_neighbours_matrix(trainData, sampleData, K):
 
     return neighboursIndices
 
-def classification_prediction(trainTarget, sampleTarget, K, neighboursIndices):
+def classification_prediction(trainTarget, sampleTarget, sampleData, K, tenIdentifier, neighboursIndices):
     #for each row, find the k nearest neighbours, and determine which class
     #this row most seems to resemble. aggregate the results for each row and
     #at the very end, classify based on the majority class that showed up
@@ -227,8 +227,23 @@ def classification_prediction(trainTarget, sampleTarget, K, neighboursIndices):
     # find number of unmatching predictions and divide by total number of predictions
     accuracy = tf.reduce_sum(tf.to_float(tf.equal(allMajorities, sampleTarget)))/neighboursIndices.shape[0]
 
+    #for K = 10, display all incorrect classifications
+    print(K)
+    print(tenIdentifier
+    if (K == tenIdentifier):
+        print("DI")
+        #get vector where 1 means that image was correctly classified
+        correctClassifications = tf.to_float(tf.equal(allMajorities, sampleTarget))
+
+        #make 0 to 1 and 1 to 0 to get all the inverse classifications
+        incorrectClassifications = (correctClassifications - [1])**2
+
+        incorrectImages = tf.matmul(sampleData, incorrectClassifications)
+
+        print(tf.shape(incorrectImages))
+
     #return maajority which has predictions of each image per row
-    return accuracy
+    return accuracy*100
 
 
 def classify(classifyParam):
@@ -238,6 +253,7 @@ def classify(classifyParam):
     trainY = tf.placeholder(tf.float32, name = "trainY")
     newX = tf.placeholder(tf.float32, name = "newX")
     newY = tf.placeholder(tf.float32, name = "newY")
+    tenIdentifier = tf.placeholder(tf.int32, name = "tenIdentifier")
 
     #define possible Ks
     possibleK = [1,5,10,15,25,50,100,200]
@@ -265,9 +281,8 @@ def classify(classifyParam):
         newX, K), feed_dict={trainX:trainData, newX:validData, K:currK}))
 
         # use this closest neighbours indices to return a predicted classification vector
-        validationAccuracyTemp = sess.run(classification_prediction(trainY, newY, K, neighboursIndices),\
-        feed_dict={trainY:trainTarget, newY:validTarget, K:currK})
-        validationAccuracyTemp *= 100
+        validationAccuracyTemp = sess.run(classification_prediction(trainY, newY, newX, K, tenIdentifier, neighboursIndices),\
+        feed_dict={trainY:trainTarget, newY:validTarget, newX: validData, K:currK, tenIdentifier:10})
         validationAccuracy.append(validationAccuracyTemp)
 
         #test data
@@ -276,9 +291,8 @@ def classify(classifyParam):
         newX, K), feed_dict={trainX:trainData, newX:testData, K:currK}))
 
         # use this closest neighbours indices to return a predicted classification vector
-        testAccuracyTemp = sess.run(classification_prediction(trainY, newY, K, neighboursIndices),\
-        feed_dict={trainY:trainTarget, newY:testTarget, K:currK})
-        testAccuracyTemp *= 100
+        testAccuracyTemp = sess.run(classification_prediction(trainY, newY, newX, K, tenIdentifier, neighboursIndices),\
+        feed_dict={trainY:trainTarget, newY:testTarget, newX: testData, K:currK, tenIdentifier:10})
         testAccuracy.append(testAccuracyTemp)
 
         print("\nwith K = %d, the validation accuracy is %f %% and the"\
@@ -295,11 +309,10 @@ def classify(classifyParam):
     newX, K), feed_dict={trainX:trainData, newX:testData, K:bestK}))
 
     # use this closest neighbours indices to return a predicted classification vector
-    testAccuracyTemp = sess.run(classification_prediction(trainY, newY, K, neighboursIndices),\
-    feed_dict={trainY:trainTarget, newY:testTarget, K:bestK})
-    testAccuracyTemp *= 100
+    testAccuracyTemp = sess.run(classification_prediction(trainY, newY, newX, K, tenIdentifier, neighboursIndices),\
+    feed_dict={trainY:trainTarget, newY:testTarget, newX: testData, K:bestK, tenIdentifier:10})
 
-    print("\nwith the best K = %d, the test accuracy is %f %%" % (bestK, testAccuracyTemp))
+    print("\nWith the best K = %d, the test accuracy is %f %%" % (bestK, testAccuracyTemp))
 
     return
 
@@ -312,6 +325,10 @@ if __name__ == '__main__':
     #part 2
     solve_KNN()
 
-    print('\n\n\n---------Part 3: Name and Gender recognition---------\n\n')
+    print('\n\n\n---------Part 3: Name recognition---------\n\n')
     #part 3: pass in 0 as an argument to classify name and 1 for gender
     classify(0)
+
+    print('\n\n\n---------Part 3: Gender recognition---------\n\n')
+    #part 3: pass in 0 as an argument to classify name and 1 for gender
+    classify(1)
