@@ -231,7 +231,7 @@ def classification_prediction(trainTarget, sampleTarget, K, neighboursIndices):
     return accuracy
 
 
-def classify():
+def classify(classifyParam):
     #define our placeholders
     K = tf.placeholder(tf.int32, name = "K")
     trainX = tf.placeholder(tf.float32, name = "trainX")
@@ -242,16 +242,17 @@ def classify():
     #define possible Ks
     possibleK = [1,5,10,15,25,50,100,200]
 
-    #load data
-    #run for name ID. task = 0
-    trainData0, validData0, testData0, trainTarget0, validTarget0, testTarget0 = \
-        data_segmentation("./data.npy", "./target.npy", 0)
+    if classifyParam == 0:
+        #load data for name ID
+        trainData, validData, testData, trainTarget, validTarget, testTarget = \
+            data_segmentation("./data.npy", "./target.npy", 0)
+    elif classifyParam == 1:
+        #run for gender ID. task = 1
+        trainData, validData, testData, trainTarget, validTarget, testTarget = \
+            data_segmentation("./data.npy", "./target.npy", 1)
 
     # print(sess.run(tf.shape(trainData0)),sess.run(tf.shape(trainTarget0)),sess.run(tf.shape(validTarget0)))
-    #run for gender ID. task = 1
-    trainData1, validData1, testData1, trainTarget1, validTarget1, testTarget1 = \
-        data_segmentation("./data.npy", "./target.npy", 1)
-
+    
     #compute the validation accuracy for each possible k
     validationAccuracy = []
 
@@ -259,14 +260,15 @@ def classify():
     
         # return a numpy matrix of closest neighbours indices
         neighboursIndices = (sess.run(find_neighbours_matrix(trainX, \
-        newX, K), feed_dict={trainX:trainData0, newX:validData0, K:currK}))
+        newX, K), feed_dict={trainX:trainData, newX:validData, K:currK}))
 
         # use this closest neighbours indices to return a predicted classification vector
         validationAccuracyTemp = sess.run(classification_prediction(trainY, newY, K, neighboursIndices),\
-        feed_dict={trainY:trainTarget0, newY:validTarget0, K:currK})
+        feed_dict={trainY:trainTarget, newY:validTarget, K:currK})
+        validationAccuracyTemp *= 100
         validationAccuracy.append(validationAccuracyTemp)
 
-        print("\nwith K = %d, the validation accuracy is %f" % (currK, validationAccuracyTemp))
+        print("\nwith K = %d, the validation accuracy is %f %%" % (currK, validationAccuracyTemp))
 
     bestK = possibleK[validationAccuracy.index(max(validationAccuracy))]
 
@@ -276,13 +278,14 @@ def classify():
 
     # return a numpy matrix of closest neighbours indices
     neighboursIndices = (sess.run(find_neighbours_matrix(trainX, \
-    newX, K), feed_dict={trainX:trainData0, newX:testData0, K:bestK}))
+    newX, K), feed_dict={trainX:trainData, newX:testData, K:bestK}))
 
     # use this closest neighbours indices to return a predicted classification vector
     testAccuracyTemp = sess.run(classification_prediction(trainY, newY, K, neighboursIndices),\
-    feed_dict={trainY:trainTarget0, newY:testTarget0, K:bestK})
+    feed_dict={trainY:trainTarget, newY:testTarget, K:bestK})
+    testAccuracyTemp *= 100
 
-    print("\nwith the best K = %d, the test accuracy is %f" % (bestK, testAccuracyTemp))
+    print("\nwith the best K = %d, the test accuracy is %f %%" % (bestK, testAccuracyTemp))
 
     return
 
@@ -294,5 +297,5 @@ if __name__ == '__main__':
     #part 2
     # solve_KNN()
 
-    #part 3
-    classify()
+    #part 3: pass in 0 as an argument to classify name and 1 for gender
+    classify(1)
