@@ -61,7 +61,7 @@ def training_responsibilities(distMatrix, K, testPointIndex = None):
     neighboursIndices = tf.expand_dims(neighboursIndices, 0)
 
     #finally, we want to compare our possibleIndices with neighboursIndices.
-    #broadcasting will take care of dimensions and then we reduce accros the 1
+    #broadcasting will take care of dimensions and then we reduce accross the 1
     #axis. Thus our N2x1x1 matrix compares to our 1xN1xK matrix and we get back
     #an N2xN1 matrix when we reduce accross the 1 axis, or K. This matrix returns
     #as True/False values, so we convert those to floating numbers. Then take
@@ -72,10 +72,7 @@ def training_responsibilities(distMatrix, K, testPointIndex = None):
     #we return that matrix divided by K since responsibiliies will have a 1/k
     #weight to them. since kNearest is a N1xN2 matrix, we just return the
     #proper row defined by testPointIndex
-    if testPointIndex == None:
-        return (kNearest/tf.to_float(K))
-    else:
-        return (kNearest/tf.to_float(K))[testPointIndex]
+    return (kNearest/tf.to_float(K))
 
 def KNN_prediction(targetY, responsibilities):
     #y(x) = r*Y
@@ -227,21 +224,6 @@ def classification_prediction(trainTarget, sampleTarget, sampleData, K, tenIdent
     # find number of unmatching predictions and divide by total number of predictions
     accuracy = tf.reduce_sum(tf.to_float(tf.equal(allMajorities, sampleTarget)))/neighboursIndices.shape[0]
 
-    #for K = 10, display all incorrect classifications
-    print(K)
-    print(tenIdentifier
-    if (K == tenIdentifier):
-        print("DI")
-        #get vector where 1 means that image was correctly classified
-        correctClassifications = tf.to_float(tf.equal(allMajorities, sampleTarget))
-
-        #make 0 to 1 and 1 to 0 to get all the inverse classifications
-        incorrectClassifications = (correctClassifications - [1])**2
-
-        incorrectImages = tf.matmul(sampleData, incorrectClassifications)
-
-        print(tf.shape(incorrectImages))
-
     #return maajority which has predictions of each image per row
     return accuracy*100
 
@@ -256,7 +238,7 @@ def classify(classifyParam):
     tenIdentifier = tf.placeholder(tf.int32, name = "tenIdentifier")
 
     #define possible Ks
-    possibleK = [1,5,10,15,25,50,100,200]
+    possibleK = [1,5,10,25,50,100,200]
 
     if classifyParam == 0:
         #load data for name ID
