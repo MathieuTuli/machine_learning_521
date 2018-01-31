@@ -136,14 +136,14 @@ def solve_KNN():
             newY:testTarget, K:currK})
         testError.append(testErrorTemp)
 
-        print("\n\nwith K = %d, the training MSE loss is %f, "
+        print("\nwith K = %d, the training MSE loss is %f, "
         "validation MSE loss is %f, and test MSE loss is %f." % (currK, \
         trainingErrorTemp, validationErrorTemp, testErrorTemp))
 
     #get the index of the minimum validator error and use that to get the
     #corresponding best K
     bestK = possibleK[validationError.index(min(validationError))]
-    print('\n\nBest K: ', bestK, '\n\n')
+    print('\nBest K: ', bestK, '\n\n')
 
     # plotPrediction, plotMSE = sess.run(run_KNN(trainX, \
     #     trainY, newX, newY, K), feed_dict={trainX:trainData, trainY:trainTarget, \
@@ -203,7 +203,7 @@ def classification_prediction(trainTarget, sampleTarget, K, neighboursIndices):
     #in the aggregate result
 
     #defined to hold the majority class from each row of the image
-    majority = []
+    allMajorities = []
 
     for i in range(neighboursIndices.shape[0]):
         #iteratively grab a new row
@@ -213,19 +213,19 @@ def classification_prediction(trainTarget, sampleTarget, K, neighboursIndices):
         possibleClassificationsVec = tf.gather(trainTarget, currentRow)
 
         #run unique_with_counts to find majority classification
-        uniqueValues, idx, count = tf.unique_with_counts(possibleClassificationsVec)
+        classes, idx, count = tf.unique_with_counts(possibleClassificationsVec)
 
         #find the majority class
-        majorityValue = tf.gather(uniqueValues, tf.argmax(count))
+        majorityClass = tf.gather(classes, tf.argmax(count))
 
         #append the majority class from the current row
-        majority.append(majorityValue)
+        allMajorities.append(majorityClass)
 
     # converting from column vector into row vector i.e stacking up all rows into one row
-    majority = tf.stack(majority)
+    allMajorities = tf.stack(allMajorities)
 
     # find number of unmatching predictions and divide by total number of predictions
-    accuracy = tf.reduce_sum(tf.to_float(tf.equal(majority, sampleTarget)))/neighboursIndices.shape[0]
+    accuracy = tf.reduce_sum(tf.to_float(tf.equal(allMajorities, sampleTarget)))/neighboursIndices.shape[0]
 
     #return maajority which has predictions of each image per row
     return accuracy
@@ -252,13 +252,15 @@ def classify(classifyParam):
             data_segmentation("./data.npy", "./target.npy", 1)
 
     # print(sess.run(tf.shape(trainData0)),sess.run(tf.shape(trainTarget0)),sess.run(tf.shape(validTarget0)))
-    
-    #compute the validation accuracy for each possible k
+
+    #compute the validation accuracy and test accuracy for each possible k
     validationAccuracy = []
+    testAccuracy = []
 
     for currK in possibleK:
-    
-        # return a numpy matrix of closest neighbours indices
+
+        #validation data
+        # return a numpy matrix of closest neighbours indices.
         neighboursIndices = (sess.run(find_neighbours_matrix(trainX, \
         newX, K), feed_dict={trainX:trainData, newX:validData, K:currK}))
 
@@ -268,11 +270,23 @@ def classify(classifyParam):
         validationAccuracyTemp *= 100
         validationAccuracy.append(validationAccuracyTemp)
 
-        print("\nwith K = %d, the validation accuracy is %f %%" % (currK, validationAccuracyTemp))
+        #test data
+        # return a numpy matrix of closest neighbours indices.
+        neighboursIndices = (sess.run(find_neighbours_matrix(trainX, \
+        newX, K), feed_dict={trainX:trainData, newX:testData, K:currK}))
+
+        # use this closest neighbours indices to return a predicted classification vector
+        testAccuracyTemp = sess.run(classification_prediction(trainY, newY, K, neighboursIndices),\
+        feed_dict={trainY:trainTarget, newY:testTarget, K:currK})
+        testAccuracyTemp *= 100
+        testAccuracy.append(testAccuracyTemp)
+
+        print("\nwith K = %d, the validation accuracy is %f %% and the"\
+        " test accuracy is %f %%" % (currK, validationAccuracyTemp, testAccuracyTemp))
 
     bestK = possibleK[validationAccuracy.index(max(validationAccuracy))]
 
-    print('\nBest K: ', bestK, '\n')
+    print('\nBest K: ', bestK)
 
     # use the bestK to find test accuracy
 
@@ -292,10 +306,12 @@ def classify(classifyParam):
 if __name__ == '__main__':
     #serves no other purpose other than to provide spacing from cpu compilation
     #suggestion messages that pop up
-    print('\n\n\n---------Assignment 1: KNN Regression---------\n\n')
+    print('\n\n\n---------Assignment 1---------\n\n')
 
+    print('\n\n\n---------Part 2: KNN Regression---------\n\n')
     #part 2
-    # solve_KNN()
+    solve_KNN()
 
+    print('\n\n\n---------Part 3: Name and Gender recognition---------\n\n')
     #part 3: pass in 0 as an argument to classify name and 1 for gender
-    classify(1)
+    classify(0)
