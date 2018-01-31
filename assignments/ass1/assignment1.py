@@ -196,7 +196,7 @@ def find_neighbours_matrix(trainData, sampleData, K):
 
     return neighboursIndices
 
-def classification_prediction(trainTarget, K, neighboursIndices):
+def classification_prediction(trainTarget, sampleTarget, K, neighboursIndices):
     #for each row, find the k nearest neighbours, and determine which class
     #this row most seems to resemble. aggregate the results for each row and
     #at the very end, classify based on the majority class that showed up
@@ -216,13 +216,19 @@ def classification_prediction(trainTarget, K, neighboursIndices):
         uniqueValues, idx, count = tf.unique_with_counts(possibleClassificationsVec)
 
         #find the majority class
-        majorityValue =  tf.gather(uniqueValues, tf.argmax(count))
+        majorityValue = tf.gather(uniqueValues, tf.argmax(count))
 
         #append the majority class from the current row
         majority.append(majorityValue)
 
+    # converting from column vector into row vector i.e stacking up all rows into one row
+    majority = tf.stack(majority)
+
+    # find number of unmatching predictions and divide by total number of predictions
+    accuracy = tf.reduce_sum(tf.to_float(tf.equal(majority, sampleTarget)))/neighboursIndices.shape[0]
+
     #return maajority which has predictions of each image per row
-    return majority
+    return accuracy
 
 
 def classify():
@@ -241,36 +247,49 @@ def classify():
     trainData0, validData0, testData0, trainTarget0, validTarget0, testTarget0 = \
         data_segmentation("./data.npy", "./target.npy", 0)
 
-    # print(sess.run(tf.shape(trainData0)),sess.run(tf.shape(trainTarget0)),sess.run(tf.shape(validData0)))
+    # print(sess.run(tf.shape(trainData0)),sess.run(tf.shape(trainTarget0)),sess.run(tf.shape(validTarget0)))
     #run for gender ID. task = 1
     trainData1, validData1, testData1, trainTarget1, validTarget1, testTarget1 = \
         data_segmentation("./data.npy", "./target.npy", 1)
 
-    #compute the MSE loss for each possible k
-    trainingError = []
-    validationError = []
-    testError = []
+    #compute the validation accuracy for each possible k
+    validationAccuracy = []
 
-    # for currK in range(1):
-    currK = 1
-    # classifications = []
+    for currK in possibleK:
+    
+        # return a numpy matrix of closest neighbours indices
+        neighboursIndices = (sess.run(find_neighbours_matrix(trainX, \
+        newX, K), feed_dict={trainX:trainData0, newX:validData0, K:currK}))
+
+        # use this closest neighbours indices to return a predicted classification vector
+        validationAccuracyTemp = sess.run(classification_prediction(trainY, newY, K, neighboursIndices),\
+        feed_dict={trainY:trainTarget0, newY:validTarget0, K:currK})
+        validationAccuracy.append(validationAccuracyTemp)
+
+        print("\nwith K = %d, the validation accuracy is %f" % (currK, validationAccuracyTemp))
+
+    bestK = possibleK[validationAccuracy.index(max(validationAccuracy))]
+
+    print('\nBest K: ', bestK, '\n')
+
+    # use the bestK to find test accuracy
 
     # return a numpy matrix of closest neighbours indices
     neighboursIndices = (sess.run(find_neighbours_matrix(trainX, \
-    newX, K), feed_dict={trainX:trainData0, newX:validData0, K:currK}))
+    newX, K), feed_dict={trainX:trainData0, newX:testData0, K:bestK}))
 
     # use this closest neighbours indices to return a predicted classification vector
-    classificationVector = sess.run(classification_prediction(trainY, K, neighboursIndices),\
-    feed_dict={trainY:trainTarget0, K:currK})
+    testAccuracyTemp = sess.run(classification_prediction(trainY, newY, K, neighboursIndices),\
+    feed_dict={trainY:trainTarget0, newY:testTarget0, K:bestK})
 
-    print('\n\nclass: ', classificationVector)
+    print("\nwith the best K = %d, the test accuracy is %f" % (bestK, testAccuracyTemp))
 
     return
 
 if __name__ == '__main__':
     #serves no other purpose other than to provide spacing from cpu compilation
     #suggestion messages that pop up
-    print('\n\n\n\n\n---------Assignment 1: KNN Regression---------\n\n')
+    print('\n\n\n---------Assignment 1: KNN Regression---------\n\n')
 
     #part 2
     # solve_KNN()
