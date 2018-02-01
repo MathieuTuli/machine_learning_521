@@ -323,4 +323,3 @@ if __name__ == '__main__':
     print('\n\n\n---------Part 3: Gender recognition---------\n\n')
     #part 3: pass in 0 as an argument to classify name and 1 for gender
     classify(1)
-
