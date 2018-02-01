@@ -334,12 +334,13 @@ def classify(classifyParam):
 
         reshaped = testData[wrongIndex].reshape(32,32)
 
-        plt.figure(0)
+        plt.figure(11)
         plt.imshow(reshaped)
 
 
         wrongKNN = sess.run(tf.gather(trainData, neighboursIndices[wrongIndex]))
 
+        print(wrongKNN.shape)
         for i in range(wrongKNN.shape[0]):
             reshaped = wrongKNN[i].reshape(32,32)
 
