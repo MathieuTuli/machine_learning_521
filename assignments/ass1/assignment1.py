@@ -153,12 +153,12 @@ def solve_KNN():
     print('\nBest K: ', bestK, '\n\n')
 
     plt.figure(currK + 1)
-    plt.plot(trainData, trainTarget, '.')
-    plt.plot(X, plotPrediction[0], '-', label=str(possibleK[0]))
-    plt.plot(X, plotPrediction[1], '-', label=str(possibleK[1]))
-    plt.plot(X, plotPrediction[2], '-', label=str(possibleK[2]))
-    plt.plot(X, plotPrediction[3], '-', label=str(possibleK[3]))
-    plt.legend(loc='best')
+    plt.plot(X, newTarget, '.', label='True Data')
+    plt.plot(X, plotPrediction[0], '-', label='K = ' + str(possibleK[0]))
+    plt.plot(X, plotPrediction[1], '-', label='K = ' + str(possibleK[1]))
+    plt.plot(X, plotPrediction[2], '-', label='K = ' + str(possibleK[2]))
+    plt.plot(X, plotPrediction[3], '-', label='K = ' + str(possibleK[3]))
+    plt.legend(loc='best', shadow = True, fancybox = True, numpoints = 1)
     plt.title("KNN regression on data1D")
     plt.show()
 
@@ -282,45 +282,45 @@ def classify(classifyParam):
     validationAccuracy = []
     testAccuracy = []
 
-    # for currK in possibleK:
-    #
-    #     #validation data
-    #     # return a numpy matrix of closest neighbours indices.
-    #     neighboursIndices = (sess.run(find_neighbours_matrix(trainX, \
-    #     newX, K), feed_dict={trainX:trainData, newX:validData, K:currK}))
-    #
-    #     # use this closest neighbours indices to return a predicted classification vector
-    #     validationAccuracyTemp = sess.run(classification_prediction(trainY, newY, trainX, newX, K, 0, neighboursIndices),\
-    #     feed_dict={trainY:trainTarget, newY:validTarget, trainX: trainData, newX: validData, K:currK})
-    #     validationAccuracy.append(validationAccuracyTemp)
-    #
-    #     #test data
-    #     # return a numpy matrix of closest neighbours indices.
-    #     neighboursIndices = (sess.run(find_neighbours_matrix(trainX, \
-    #     newX, K), feed_dict={trainX:trainData, newX:testData, K:currK}))
-    #
-    #     # use this closest neighbours indices to return a predicted classification vector
-    #     testAccuracyTemp = sess.run(classification_prediction(trainY, newY, trainX, newX, K, 0, neighboursIndices),\
-    #     feed_dict={trainY:trainTarget, newY:testTarget, trainX: trainData, newX: testData, K:currK})
-    #     testAccuracy.append(testAccuracyTemp)
-    #
-    #     print("\nwith K = %d, the validation accuracy is %f %% and the"\
-    #     " test accuracy is %f %%" % (currK, validationAccuracyTemp, testAccuracyTemp))
-    #
-    # bestK = possibleK[validationAccuracy.index(max(validationAccuracy))]
-    #
-    # print('\nBest K: ', bestK)
-    #
-    # # use the bestK to find test accuracy
-    # # return a numpy matrix of closest neighbours indices
-    # neighboursIndices = (sess.run(find_neighbours_matrix(trainX, \
-    # newX, K), feed_dict={trainX:trainData, newX:testData, K:bestK}))
-    #
-    # # use this closest neighbours indices to return a predicted classification vector
-    # testAccuracyTemp = sess.run(classification_prediction(trainY, newY, trainX, newX, K, 0, neighboursIndices),\
-    # feed_dict={trainY:trainTarget, newY:testTarget, trainX: trainData, newX: testData, K:bestK})
-    #
-    # print("\nWith the best K = %d, the test accuracy is %f %%" % (bestK, testAccuracyTemp))
+    for currK in possibleK:
+    
+        #validation data
+        # return a numpy matrix of closest neighbours indices.
+        neighboursIndices = (sess.run(find_neighbours_matrix(trainX, \
+        newX, K), feed_dict={trainX:trainData, newX:validData, K:currK}))
+    
+        # use this closest neighbours indices to return a predicted classification vector
+        validationAccuracyTemp = sess.run(classification_prediction(trainY, newY, trainX, newX, K, 0, neighboursIndices),\
+        feed_dict={trainY:trainTarget, newY:validTarget, trainX: trainData, newX: validData, K:currK})
+        validationAccuracy.append(validationAccuracyTemp)
+    
+        #test data
+        # return a numpy matrix of closest neighbours indices.
+        neighboursIndices = (sess.run(find_neighbours_matrix(trainX, \
+        newX, K), feed_dict={trainX:trainData, newX:testData, K:currK}))
+    
+        # use this closest neighbours indices to return a predicted classification vector
+        testAccuracyTemp = sess.run(classification_prediction(trainY, newY, trainX, newX, K, 0, neighboursIndices),\
+        feed_dict={trainY:trainTarget, newY:testTarget, trainX: trainData, newX: testData, K:currK})
+        testAccuracy.append(testAccuracyTemp)
+    
+        print("\nwith K = %d, the validation accuracy is %f %% and the"\
+        " test accuracy is %f %%" % (currK, validationAccuracyTemp, testAccuracyTemp))
+    
+    bestK = possibleK[validationAccuracy.index(max(validationAccuracy))]
+    
+    print('\nBest K: ', bestK)
+    
+    # use the bestK to find test accuracy
+    # return a numpy matrix of closest neighbours indices
+    neighboursIndices = (sess.run(find_neighbours_matrix(trainX, \
+    newX, K), feed_dict={trainX:trainData, newX:testData, K:bestK}))
+    
+    # use this closest neighbours indices to return a predicted classification vector
+    testAccuracyTemp = sess.run(classification_prediction(trainY, newY, trainX, newX, K, 0, neighboursIndices),\
+    feed_dict={trainY:trainTarget, newY:testTarget, trainX: trainData, newX: testData, K:bestK})
+    
+    print("\nWith the best K = %d, the test accuracy is %f %%" % (bestK, testAccuracyTemp))
 
     #for k = 10, display failure case
     if(classifyParam == 0):
