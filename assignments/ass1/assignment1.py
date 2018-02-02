@@ -282,43 +282,43 @@ def classify(classifyParam):
     testAccuracy = []
 
     for currK in possibleK:
-    
+
         #validation data
         # return a numpy matrix of closest neighbours indices.
         neighboursIndices = (sess.run(find_neighbours_matrix(trainX, \
         newX, K), feed_dict={trainX:trainData, newX:validData, K:currK}))
-    
+
         # use this closest neighbours indices to return a predicted classification vector
         validationAccuracyTemp = sess.run(classification_prediction(trainY, newY, trainX, newX, K, 0, neighboursIndices),\
         feed_dict={trainY:trainTarget, newY:validTarget, trainX: trainData, newX: validData, K:currK})
         validationAccuracy.append(validationAccuracyTemp)
-    
+
         #test data
         # return a numpy matrix of closest neighbours indices.
         neighboursIndices = (sess.run(find_neighbours_matrix(trainX, \
         newX, K), feed_dict={trainX:trainData, newX:testData, K:currK}))
-    
+
         # use this closest neighbours indices to return a predicted classification vector
         testAccuracyTemp = sess.run(classification_prediction(trainY, newY, trainX, newX, K, 0, neighboursIndices),\
         feed_dict={trainY:trainTarget, newY:testTarget, trainX: trainData, newX: testData, K:currK})
         testAccuracy.append(testAccuracyTemp)
-    
+
         print("\nwith K = %d, the validation accuracy is %f %% and the"\
         " test accuracy is %f %%" % (currK, validationAccuracyTemp, testAccuracyTemp))
-    
+
     bestK = possibleK[validationAccuracy.index(max(validationAccuracy))]
-    
+
     print('\nBest K: ', bestK)
-    
+
     # use the bestK to find test accuracy
     # return a numpy matrix of closest neighbours indices
     neighboursIndices = (sess.run(find_neighbours_matrix(trainX, \
     newX, K), feed_dict={trainX:trainData, newX:testData, K:bestK}))
-    
+
     # use this closest neighbours indices to return a predicted classification vector
     testAccuracyTemp = sess.run(classification_prediction(trainY, newY, trainX, newX, K, 0, neighboursIndices),\
     feed_dict={trainY:trainTarget, newY:testTarget, trainX: trainData, newX: testData, K:bestK})
-    
+
     print("\nWith the best K = %d, the test accuracy is %f %%" % (bestK, testAccuracyTemp))
 
     #for k = 10, display failure case
@@ -337,10 +337,10 @@ def classify(classifyParam):
 
     wrongKNN = sess.run(tf.gather(trainData, neighboursIndices[wrongIndex]))
 
-    print(wrongKNN.shape)
+    # print(wrongKNN.shape)
     for i in range(wrongKNN.shape[0]):
         reshaped = wrongKNN[i].reshape(32,32)
-        print("i: ",i," name/gender: ", trainTarget[neighboursIndices[wrongIndex][i]])
+        # print("i: ",i," name/gender: ", trainTarget[neighboursIndices[wrongIndex][i]])
         plt.figure(i)
         plt.imshow(reshaped, cmap='gray')
 
