@@ -234,13 +234,12 @@ def classification_prediction(trainTarget, sampleTarget, trainData, sampleData, 
     #tenIdentifier = 1 when we want to do the last part of 3.2 display failed
     #image
     if(tenIdentifier == 1):
-        #stores a vector where 1 means the image was incorrectly identified
+        #stores a vector where 0 means the image was incorrectly identified
         incorrectIndices = tf.to_float(tf.equal(allMajorities, sampleTarget))
-        incorrectIndices = (incorrectIndices - [1])**2
 
         #we only need one image, so taking argmax will return the first index
-        #that was incorrectly classified
-        wrongIndex = tf.argmax(incorrectIndices)
+        #that was incorrectly classified. Take -ve since want 0 as identifier
+        wrongIndex = tf.argmax(-incorrectIndices)
 
         #also, return the wrong nearest neighbours
         wrongKNN = tf.gather(trainData, neighboursIndices)
@@ -323,31 +322,30 @@ def classify(classifyParam):
     # print("\nWith the best K = %d, the test accuracy is %f %%" % (bestK, testAccuracyTemp))
 
     #for k = 10, display failure case
-    if(classifyParam == 0):
-        # return a numpy matrix of closest neighbours indices
-        neighboursIndices = (sess.run(find_neighbours_matrix(trainX, \
-        newX, K), feed_dict={trainX:trainData, newX:testData, K:10}))
+    # return a numpy matrix of closest neighbours indices
+    neighboursIndices = (sess.run(find_neighbours_matrix(trainX, \
+    newX, K), feed_dict={trainX:trainData, newX:testData, K:10}))
 
-        # use this closest neighbours indices to return a predicted classification vector
-        wrongIndex = sess.run(classification_prediction(trainY, newY, trainX, newX, K, 1, neighboursIndices),\
-        feed_dict={trainY:trainTarget, newY:testTarget, trainX: trainData, newX: testData, K:10})
+    # use this closest neighbours indices to return a predicted classification vector
+    wrongIndex = sess.run(classification_prediction(trainY, newY, trainX, newX, K, 1, neighboursIndices),\
+    feed_dict={trainY:trainTarget, newY:testTarget, trainX: trainData, newX: testData, K:10})
 
-        reshaped = testData[wrongIndex].reshape(32,32)
+    reshaped = testData[wrongIndex].reshape(32,32)
 
-        plt.figure(11)
-        plt.imshow(reshaped)
+    plt.figure(11)
+    plt.imshow(reshaped,cmap='gray')
 
+    wrongKNN = sess.run(tf.gather(trainData, neighboursIndices[wrongIndex]))
 
-        wrongKNN = sess.run(tf.gather(trainData, neighboursIndices[wrongIndex]))
+    print(wrongKNN.shape)
+    for i in range(wrongKNN.shape[0]):
+        reshaped = wrongKNN[i].reshape(32,32)
+        print("i: ",i," name/gender: ", trainTarget[neighboursIndices[wrongIndex][i]])
+        plt.figure(i)
+        plt.imshow(reshaped, cmap='gray')
 
-        print(wrongKNN.shape)
-        for i in range(wrongKNN.shape[0]):
-            reshaped = wrongKNN[i].reshape(32,32)
+    plt.show()
 
-            plt.figure(i)
-            plt.imshow(reshaped)
-
-        plt.show()
     return
 
 if __name__ == '__main__':
