@@ -5,7 +5,10 @@
 from __future__ import print_function
 import numpy as np
 import tensorflow as tf
-# import matplotlib.pylab as plt
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+
+sess = tf.Session()
 
 #----------Question: 1---------------------------------------------------------
 
@@ -19,7 +22,6 @@ def eucl_dist(X,Z):
     #element thus returning the N1xN2 matrix we desire
     return tf.reduce_sum((XExpanded-ZExpanded)**2, 1)
 
-sess = tf.Session()
 # x = tf.constant([[1,2,1,2,2],[3,4,1,2,2]])
 # z = tf.constant([[11,22,1,23,32],[13,14,1,22,12],[2,3,4,5,6]])
 # print(sess.run(eucl_dist(x,z)))
@@ -95,7 +97,7 @@ def run_KNN(trainData, trainTarget, sampleData, sampleTarget, K):
     #compute the MSE
     testMSE = MSE_loss(sampleTarget, testPrediction)
 
-    return testMSE
+    return testPrediction, testMSE
 
 def solve_KNN():
     #load data
@@ -109,6 +111,7 @@ def solve_KNN():
 
     #our input matrix
     X = np.linspace(0.0,11.0, num = 1000)[:,np.newaxis]
+    newTarget = np.sin(X) + 0.1 * np.power(X, 2) + 0.5 * np.random.randn(1000 , 1)
 
     #define possible Ks
     possibleK = [1,3,5,50]
@@ -118,20 +121,28 @@ def solve_KNN():
     validationError = []
     testError = []
 
+    plotPrediction = []
+
     for currK in possibleK:
-        trainingErrorTemp = sess.run(run_KNN(trainX, trainY, trainX, trainY, K), \
+        trainingErrorPrediction, trainingErrorTemp = sess.run(run_KNN(trainX, trainY, trainX, trainY, K), \
             feed_dict={trainX:trainData, trainY:trainTarget, K:currK})
         trainingError.append(trainingErrorTemp)
 
-        validationErrorTemp = sess.run(run_KNN(trainX, trainY, newX, newY, K), \
+        validationErrorPrediction, validationErrorTemp = sess.run(run_KNN(trainX, trainY, newX, newY, K), \
             feed_dict={trainX:trainData, trainY:trainTarget, newX:validData, \
             newY:validTarget, K:currK})
         validationError.append(validationErrorTemp)
 
-        testErrorTemp = sess.run(run_KNN(trainX, trainY, newX, newY, K), \
+        testErrorPrediction, testErrorTemp = sess.run(run_KNN(trainX, trainY, newX, newY, K), \
             feed_dict={trainX:trainData, trainY:trainTarget, newX:testData, \
             newY:testTarget, K:currK})
         testError.append(testErrorTemp)
+
+        # For Q2.2
+        plotPredictionTemp, plotMSETemp = sess.run(run_KNN(trainX, trainY, newX, newY, K), \
+        feed_dict={trainX:trainData, trainY:trainTarget, \
+        newX:X, newY:newTarget, K:currK})
+        plotPrediction.append(plotPredictionTemp)
 
         print("\nwith K = %d, the training MSE loss is %f, "
         "validation MSE loss is %f, and test MSE loss is %f." % (currK, \
@@ -142,15 +153,15 @@ def solve_KNN():
     bestK = possibleK[validationError.index(min(validationError))]
     print('\nBest K: ', bestK, '\n\n')
 
-    # plotPrediction, plotMSE = sess.run(run_KNN(trainX, \
-    #     trainY, newX, newY, K), feed_dict={trainX:trainData, trainY:trainTarget, \
-    #     newX:X, newY:validTarget, K:currK})
-    #
-    # plt.figure(currK + 1)
-    # plot.plot(trainData, trainTarget, '.')
-    # plt.plot(X, plotPrediction, '-')
-    # plt.title("KNN regression on data1D, where K = %d"%currK)
-    # plot.show()
+    plt.figure(currK + 1)
+    plt.plot(X, newTarget, '.', label='True Data')
+    plt.plot(X, plotPrediction[0], '-', label='K = ' + str(possibleK[0]))
+    plt.plot(X, plotPrediction[1], '-', label='K = ' + str(possibleK[1]))
+    plt.plot(X, plotPrediction[2], '-', label='K = ' + str(possibleK[2]))
+    plt.plot(X, plotPrediction[3], '-', label='K = ' + str(possibleK[3]))
+    plt.legend(loc='best', shadow = True, fancybox = True, numpoints = 1)
+    plt.title("KNN regression on data1D")
+    plt.show()
 
     return
 
@@ -193,7 +204,7 @@ def find_neighbours_matrix(trainData, sampleData, K):
 
     return neighboursIndices
 
-def classification_prediction(trainTarget, sampleTarget, sampleData, K, tenIdentifier, neighboursIndices):
+def classification_prediction(trainTarget, sampleTarget, trainData, sampleData, K, tenIdentifier, neighboursIndices):
     #for each row, find the k nearest neighbours, and determine which class
     #this row most seems to resemble. aggregate the results for each row and
     #at the very end, classify based on the majority class that showed up
@@ -221,6 +232,23 @@ def classification_prediction(trainTarget, sampleTarget, sampleData, K, tenIdent
     # converting from column vector into row vector i.e stacking up all rows into one row
     allMajorities = tf.stack(allMajorities)
 
+    #tenIdentifier = 1 when we want to do the last part of 3.2 display failed
+    #image
+    if(tenIdentifier == 1):
+        #stores a vector where 0 means the image was incorrectly identified
+        incorrectIndices = tf.to_float(tf.equal(allMajorities, sampleTarget))
+
+        #we only need one image, so taking argmax will return the first index
+        #that was incorrectly classified. Take -ve since want 0 as identifier
+        wrongIndex = tf.argmax(-incorrectIndices)
+
+        #also, return the wrong nearest neighbours
+        wrongKNN = tf.gather(trainData, neighboursIndices)
+
+        #to avoid dealing with tensors, return the index to be dealt outside
+        #the session.
+        return wrongIndex
+
     # find number of unmatching predictions and divide by total number of predictions
     accuracy = tf.reduce_sum(tf.to_float(tf.equal(allMajorities, sampleTarget)))/neighboursIndices.shape[0]
 
@@ -235,7 +263,6 @@ def classify(classifyParam):
     trainY = tf.placeholder(tf.float32, name = "trainY")
     newX = tf.placeholder(tf.float32, name = "newX")
     newY = tf.placeholder(tf.float32, name = "newY")
-    tenIdentifier = tf.placeholder(tf.int32, name = "tenIdentifier")
 
     #define possible Ks
     possibleK = [1,5,10,25,50,100,200]
@@ -263,8 +290,8 @@ def classify(classifyParam):
         newX, K), feed_dict={trainX:trainData, newX:validData, K:currK}))
 
         # use this closest neighbours indices to return a predicted classification vector
-        validationAccuracyTemp = sess.run(classification_prediction(trainY, newY, newX, K, tenIdentifier, neighboursIndices),\
-        feed_dict={trainY:trainTarget, newY:validTarget, newX: validData, K:currK, tenIdentifier:10})
+        validationAccuracyTemp = sess.run(classification_prediction(trainY, newY, trainX, newX, K, 0, neighboursIndices),\
+        feed_dict={trainY:trainTarget, newY:validTarget, trainX: trainData, newX: validData, K:currK})
         validationAccuracy.append(validationAccuracyTemp)
 
         #test data
@@ -273,8 +300,8 @@ def classify(classifyParam):
         newX, K), feed_dict={trainX:trainData, newX:testData, K:currK}))
 
         # use this closest neighbours indices to return a predicted classification vector
-        testAccuracyTemp = sess.run(classification_prediction(trainY, newY, newX, K, tenIdentifier, neighboursIndices),\
-        feed_dict={trainY:trainTarget, newY:testTarget, newX: testData, K:currK, tenIdentifier:10})
+        testAccuracyTemp = sess.run(classification_prediction(trainY, newY, trainX, newX, K, 0, neighboursIndices),\
+        feed_dict={trainY:trainTarget, newY:testTarget, trainX: trainData, newX: testData, K:currK})
         testAccuracy.append(testAccuracyTemp)
 
         print("\nwith K = %d, the validation accuracy is %f %% and the"\
@@ -285,16 +312,40 @@ def classify(classifyParam):
     print('\nBest K: ', bestK)
 
     # use the bestK to find test accuracy
-
     # return a numpy matrix of closest neighbours indices
     neighboursIndices = (sess.run(find_neighbours_matrix(trainX, \
     newX, K), feed_dict={trainX:trainData, newX:testData, K:bestK}))
 
     # use this closest neighbours indices to return a predicted classification vector
-    testAccuracyTemp = sess.run(classification_prediction(trainY, newY, newX, K, tenIdentifier, neighboursIndices),\
-    feed_dict={trainY:trainTarget, newY:testTarget, newX: testData, K:bestK, tenIdentifier:10})
+    testAccuracyTemp = sess.run(classification_prediction(trainY, newY, trainX, newX, K, 0, neighboursIndices),\
+    feed_dict={trainY:trainTarget, newY:testTarget, trainX: trainData, newX: testData, K:bestK})
 
     print("\nWith the best K = %d, the test accuracy is %f %%" % (bestK, testAccuracyTemp))
+
+    #for k = 10, display failure case
+    # return a numpy matrix of closest neighbours indices
+    neighboursIndices = (sess.run(find_neighbours_matrix(trainX, \
+    newX, K), feed_dict={trainX:trainData, newX:testData, K:10}))
+
+    # use this closest neighbours indices to return a predicted classification vector
+    wrongIndex = sess.run(classification_prediction(trainY, newY, trainX, newX, K, 1, neighboursIndices),\
+    feed_dict={trainY:trainTarget, newY:testTarget, trainX: trainData, newX: testData, K:10})
+
+    reshaped = testData[wrongIndex].reshape(32,32)
+
+    plt.figure(11)
+    plt.imshow(reshaped,cmap='gray')
+
+    wrongKNN = sess.run(tf.gather(trainData, neighboursIndices[wrongIndex]))
+
+    # print(wrongKNN.shape)
+    for i in range(wrongKNN.shape[0]):
+        reshaped = wrongKNN[i].reshape(32,32)
+        # print("i: ",i," name/gender: ", trainTarget[neighboursIndices[wrongIndex][i]])
+        plt.figure(i)
+        plt.imshow(reshaped, cmap='gray')
+
+    plt.show()
 
     return
 
