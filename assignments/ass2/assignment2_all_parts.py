@@ -38,12 +38,15 @@ def eucl_dist(X,Z):
     #element thus returning the N1xN2 matrix we desire
     return tf.reduce_sum((XExpanded-ZExpanded)**2, 1)
 
-# x = tf.constant([[1,2,1,2,2],[3,4,1,2,2]])
-# z = tf.constant([[11,22,1,23,32],[13,14,1,22,12],[2,3,4,5,6]])
-# print(sess.run(eucl_dist(x,z)))
+def hypothesis(W,X):
+    return tf.matmul(W, X)
 
+#not sure what 'b' is for
 def total_loss(W, X, Y, b, decay_coeff):
-    return
+    MSE = tf.reduce_mean(tf.reduce_mean(tf.square(hypothesis + b - Y),1))
+    WDL = eucl_dist(W, tf.constant([0])) * tf.to_float(decay_coeff/2)
+    return MSE + WDL
+
 
 def linear_regression():
     B = tf.placeholder(tf.int32, name = "B")
