@@ -28,6 +28,35 @@ def load_date():
         testData, testTarget = Data[3600:], Target[3600:]
         return trainData, trainTarget, validData, validTarget, testData, testTarget
 
+def eucl_dist(X,Z):
+    XExpanded = tf.expand_dims(X,2) # shape [N1, D, 1]
+    ZExpanded = tf.expand_dims(tf.transpose(Z),0) # shape [1, D, N2]
+    #for both...axis2 = D. for axis0 and axis2, there is a corresponding size 1.
+    #makes them compatible for broadcasting
+
+    #return the reduced sum accross axis 1. This will sum accros the D dimensional
+    #element thus returning the N1xN2 matrix we desire
+    return tf.reduce_sum((XExpanded-ZExpanded)**2, 1)
+
+# x = tf.constant([[1,2,1,2,2],[3,4,1,2,2]])
+# z = tf.constant([[11,22,1,23,32],[13,14,1,22,12],[2,3,4,5,6]])
+# print(sess.run(eucl_dist(x,z)))
+
+def total_loss(W, X, Y, b, decay_coeff):
+    return
+
+def linear_regression():
+    B = tf.placeholder(tf.int32, name = "B")
+    trainX = tf.placeholder(tf.float32, name = "trainX")
+    trainY = tf.placeholder(tf.float32, name = "trainY")
+    newX = tf.placeholder(tf.float32, name = "newX")
+    newY = tf.placeholder(tf.float32, name = "newY")
+
+    possibleB = [500, 1500, 3500]
+    possibleLambda = [0., 0.001, 0.1, 1]
+    iterations = 2000
+    learning_rates = [0.005, 0.001, 0.0001]
+    return
 
 if __name__ == '__main__':
     #serves no other purpose other than to provide spacing from cpu compilation
