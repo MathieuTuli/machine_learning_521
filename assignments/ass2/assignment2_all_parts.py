@@ -9,7 +9,7 @@ import matplotlib.cm as cm
 
 sess = tf.Session()
 
-def load_date():
+def load_data():
     with np.load("notMNIST.npz") as data :
         Data, Target = data ["images"], data["labels"]
         posClass = 2
@@ -26,25 +26,25 @@ def load_date():
         trainData, trainTarget = Data[:3500], Target[:3500]
         validData, validTarget = Data[3500:3600], Target[3500:3600]
         testData, testTarget = Data[3600:], Target[3600:]
+
+        #shuffle and reshape data
+        trainData = np.reshape(trainData, (3500,-1))
+        validData = np.reshape(validData, (100,-1))
+        testData = np.reshape(testData, (145,-1))
         return trainData, trainTarget, validData, validTarget, testData, testTarget
 
-def eucl_dist(X,Z):
-    XExpanded = tf.expand_dims(X,2) # shape [N1, D, 1]
-    ZExpanded = tf.expand_dims(tf.transpose(Z),0) # shape [1, D, N2]
-    #for both...axis2 = D. for axis0 and axis2, there is a corresponding size 1.
-    #makes them compatible for broadcasting
-
-    #return the reduced sum accross axis 1. This will sum accros the D dimensional
-    #element thus returning the N1xN2 matrix we desire
-    return tf.reduce_sum((XExpanded-ZExpanded)**2, 1)
-
 def hypothesis(W,X):
-    return tf.matmul(W, X)
+    return tf.matmul(X, W)
+
+def update(W, learning_rate, X, Y, B):
+    newW = W - total_loss
+    return newW
 
 #not sure what 'b' is for
 def total_loss(W, X, Y, b, decay_coeff):
-    MSE = tf.reduce_mean(tf.reduce_mean(tf.square(hypothesis + b - Y),1))
-    WDL = eucl_dist(W, tf.constant([0])) * tf.to_float(decay_coeff/2)
+    hypothesis = hypothesis(X, W)
+    MSE = tf.matmul((hypothesis + b - Y), X)
+    WDL = W * tf.to_float(decay_coeff)
     return MSE + WDL
 
 
@@ -55,6 +55,7 @@ def linear_regression():
     newX = tf.placeholder(tf.float32, name = "newX")
     newY = tf.placeholder(tf.float32, name = "newY")
 
+    trainData, trainTarget, validData, validTarget, testData, testTarget = load_data()
     possibleB = [500, 1500, 3500]
     possibleLambda = [0., 0.001, 0.1, 1]
     iterations = 2000
@@ -65,3 +66,4 @@ if __name__ == '__main__':
     #serves no other purpose other than to provide spacing from cpu compilation
     #suggestion messages that pop up
     print('\n\n\n---------Assignment 1---------\n\n')
+    linear_regression()
