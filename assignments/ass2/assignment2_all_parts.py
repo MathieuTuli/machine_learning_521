@@ -48,12 +48,14 @@ def total_loss(W, X, Y, b, decay_coeff):
     return MSE + WDL
 
 
-def linear_regression():
+def _1_1():
     B = tf.placeholder(tf.int32, name = "B")
     trainX = tf.placeholder(tf.float32, name = "trainX")
     trainY = tf.placeholder(tf.float32, name = "trainY")
     newX = tf.placeholder(tf.float32, name = "newX")
     newY = tf.placeholder(tf.float32, name = "newY")
+
+    SGD = tf.train.GradientDescentOptimizer
 
     possibleB = [500, 1500, 3500]
     possibleLambda = [0., 0.001, 0.1, 1]
