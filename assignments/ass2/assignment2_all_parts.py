@@ -40,7 +40,7 @@ def calc_MSE(Y, X, W, b, wdc):
     Ld = tf.reduce_mean(tf.reduce_mean(
                 tf.square(hypothesis - Y), 1))
 
-    Lw = (wdc / 2) * tf.reduce_sum(tf.square(W))
+    Lw = (wdc) * tf.reduce_sum(tf.square(W))
     return Lw + Ld
 
 def linear_regression():
@@ -75,8 +75,12 @@ def linear_regression():
     print("\n-----PART 1.1-----\n\n")
     #variables specigic to PART 1.1:
     rateLosses = [0.,0.,0.]
-    lossPerIter = np.zeros(iterations)
 
+    fig = plt.figure()
+    plt.xlabel("EPOCHS")
+    plt.ylabel("LOSS PER EPOCH")
+
+    lossPerIter = []
     rateIndicator = 0
     for rate in possibleRates:
         #reset W and b for each iterations
@@ -89,14 +93,15 @@ def linear_regression():
         optimizer = tf.train.GradientDescentOptimizer(rate)
         train = optimizer.minimize(MSELoss)
 
-        np.random.shuffle(indices)
-        shuffledTrainingData = trainData[indices]
-        shuffledTrainingTarget = trainTarget[indices]
 
         numEpochs = 0
         for i in range(iterations):
             batchIndicator = (i % numB[0]) * possibleB[0]
 
+            if not (i % numB[0]):
+                np.random.shuffle(indices)
+                shuffledTrainingData = trainData[indices]
+                shuffledTrainingTarget = trainTarget[indices]
             #since we want to consider epochs, we don't be taking random
             #indices rather, will be grabing batches of size B = 500, sliding
             #over the data set each iteration
@@ -106,21 +111,27 @@ def linear_regression():
 
             sess.run(train, feed_dict = {X: currData, Y: currTarget})
 
-            lossPerIter[i] = sess.run(MSELoss, feed_dict = {X: currData, Y: currTarget})
+            if ((i+1) % numB[0]) == 0:
+                #divide by 2 since we didn't in the MSE function due to
+                #matrix complications
+                rateLosses[rateIndicator] = (sess.run(MSELoss, feed_dict = {X: currData, Y: currTarget})) / 2
+                lossPerIter.append(rateLosses[rateIndicator])
 
             # print("Epoch:", numEpochs, "| Loss:", lossPerIter[i])
             # numEpochs += 1
-        print("Epoch:", numEpochs, "| Loss:", lossPerIter[iterations - 1])
-        #plot
-        steps = np.linspace(0, iterations, iterations)
-        fig = plt.figure()
-        plt.plot(steps, lossPerIter, '.')
-        plt.xlabel("STEPS (1 EPOCH = 7 STEPS)")
-        plt.ylabel("LOSS PER STEP")
-        fig.savefig(str(rate) + "_1_1.png")
 
-        rateLosses[rateIndicator] = sess.run(MSELoss, feed_dict = {X: currData, Y: currTarget})
+        #plot
+        epochs = np.linspace(0, int(len(lossPerIter)), num = int(len(lossPerIter)))
+        if(rateIndicator == 0):
+            plt.plot(epochs, lossPerIter, 'r-')
+        elif(rateIndicator == 1):
+            plt.plot(epochs, lossPerIter, 'g-')
+        elif(rateIndicator == 2):
+            plt.plot(epochs, lossPerIter, 'b-')
+
         rateIndicator += 1
+
+    fig.savefig("_1_1.png")
 
     print("\nThe losses per learning rate:" , \
         "Rate:", possibleRates[0], ":", "Loss:", rateLosses[0], "|", \
