@@ -36,7 +36,7 @@ def load_data():
         return trainData, trainTarget, validData, validTarget, testData, testTarget
 
 def calc_MSE(Y, X, W, b, wdc):
-    hypothesis = (tf.transpose(W) * X) + b
+    hypothesis = tf.matmul(X,W) + b
     Ld = 0.5 * tf.reduce_mean(
                 tf.square(hypothesis - Y))
 
@@ -47,8 +47,6 @@ def linear_regression():
     #DEFINE PLACEHOLDERS
     X = tf.placeholder(tf.float32, name="data")
     Y = tf.placeholder(tf.float32, name="target")
-    W = tf.Variable(tf.random_normal([PIXELCOUNT]))
-    b = tf.Variable(tf.random_normal([PIXELCOUNT]))
 
     #INITIALIZE
     sess.run(tf.global_variables_initializer())
@@ -65,10 +63,9 @@ def linear_regression():
                 sizeTrainData // possibleB[1],
                     sizeTrainData // possibleB[2]]
     possibleWdc = [0., 0.001, 0.1, 1]
-    iterations = 500
+    iterations = 20000
     possibleRates = [0.005, 0.001, 0.0001]
 
-    MSELoss = calc_MSE(Y, X, W, b, possibleWdc[0])
     #-----------------PART 1.1--------------------------------------------------
     print("\n-----PART 1.1-----\n\n")
     #variables specigic to PART 1.1:
@@ -77,6 +74,12 @@ def linear_regression():
 
     rateIndicator = 0
     for rate in possibleRates:
+        #reset W and b for each iterations
+        W = tf.Variable(tf.truncated_normal([PIXELCOUNT, 1], stddev = 0.5, dtype = tf.float32))
+        b = tf.Variable(tf.truncated_normal([1], stddev = 0.1, dtype = tf.float32))
+        sess.run(tf.global_variables_initializer())
+        MSELoss = calc_MSE(Y, X, W, b, possibleWdc[0])
+
         print("Rate:", rate)
         optimizer = tf.train.GradientDescentOptimizer(rate)
         train = optimizer.minimize(MSELoss)
@@ -94,10 +97,18 @@ def linear_regression():
             sess.run(train, feed_dict = {X: currData, Y: currTarget})
             lossPerIter[i] = sess.run(MSELoss, feed_dict = {X: currData, Y: currTarget})
 
-            if((i % (sizeTrainData)) == 0):
-                numEpochs += 1
-                print("Epoch:", numEpochs, "| Loss:", lossPerIter[i])
-        rateLosses[rateIndicator] = lossPerIter[iterations - 1]
+            # print("Epoch:", numEpochs, "| Loss:", lossPerIter[i])
+            # numEpochs += 1
+        print("Epoch:", numEpochs, "| Loss:", lossPerIter[iterations - 1])
+        #plot
+        steps = np.linspace(0, iterations, num=iterations)
+        fig = plt.figure()
+        plt.plot(steps, lossPerIter, "c-")
+        plt.xlabel("STEPS")
+        plt.ylabel("LOSS PER STEP")
+        fig.savefig(str(rate) + "_1_1.png")
+
+        rateLosses[rateIndicator] = sess.run(MSELoss, feed_dict = {X: currData, Y: currTarget})
         rateIndicator += 1
 
     print("\nThe losses per learning rate:" , \
@@ -107,14 +118,19 @@ def linear_regression():
 
     optRate = possibleRates[np.argmin(rateLosses)]
     print("\nOptimal rate:", optRate)
+
     #-----------------PART 1.2--------------------------------------------------
     print("\n\n\n\n-----PART 1.2-----\n\n")
     batchLosses = [0.,0.,0.]
     batchTime = [0., 0., 0.]
-    lossPerBatch = np.zeros(iterations)
     batchSizeIndicator = 0
 
     for sizeB in possibleB:
+        W = tf.Variable(tf.truncated_normal([PIXELCOUNT, 1], stddev = 0.5, dtype = tf.float32))
+        b = tf.Variable(tf.truncated_normal([1], stddev = 0.1, dtype = tf.float32))
+        sess.run(tf.global_variables_initializer())
+        MSELoss = calc_MSE(Y, X, W, b, possibleWdc[0])
+
         start = timeit.timeit()
 
         optimizer = tf.train.GradientDescentOptimizer(optRate)
@@ -123,18 +139,14 @@ def linear_regression():
         for i in range(iterations):
             batchIndicator = (i % numB[batchSizeIndicator]) * sizeB
 
-            #since we want to consider epochs, we don't be taking random
-            #indices rather, will be grabing batches of size B = 500, sliding
-            #over the data set each iteration
-            currData, currTarget = trainData[batchIndicator:batchIndicator + possibleB[0]], \
-                                trainTarget[batchIndicator:batchIndicator + possibleB[0]]
+            currData, currTarget = trainData[batchIndicator:batchIndicator + sizeB], \
+                                trainTarget[batchIndicator:batchIndicator + sizeB]
 
             sess.run(train, feed_dict = {X: currData, Y: currTarget})
-            lossPerBatch[i] = sess.run(MSELoss, feed_dict = {X: currData, Y: currTarget})
 
-        batchLosses[batchSizeIndicator] = lossPerBatch[iterations - 1]
         end = timeit.timeit()
-        batchTime[batchSizeIndicator] = end - start
+        batchLosses[batchSizeIndicator] = sess.run(MSELoss, feed_dict = {X: currData, Y: currTarget})
+        batchTime[batchSizeIndicator] = abs(end - start)
         batchSizeIndicator += 1
 
     print("The losses per batch size:" , \
@@ -142,9 +154,6 @@ def linear_regression():
         "Batch size", possibleB[1], ":", "Loss:", batchLosses[1], "|", \
         "Batch size", possibleB[2], ":", "Loss:", batchLosses[2])
 
-    batchTime = [   batchTime[0] / batchTime[0], \
-                    batchTime[1] / batchTime[0], \
-                    batchTime[2] / batchTime[0]]
     print("\nBatch times as ratio of B = 500 time:", \
         "Batch size", possibleB[0], ":", "Time:", batchTime[0], "|", \
         "Batch size", possibleB[1], ":", "Time:", batchTime[1], "|", \
@@ -152,9 +161,92 @@ def linear_regression():
 
     #-----------------PART 1.3--------------------------------------------------
     print("\n\n\n\n-----PART 1.3-----\n\n")
+    #variables specigic to PART 1.3:
+    wdcLosses = [0.,0.,0.,0.]
+    validAccuracies= [0.,0.,0.,0.]
+
+    wdcIndicator = 0
+    weightList = []
+    biasList = []
+
+    for wdc in possibleWdc:
+        W = tf.Variable(tf.truncated_normal([PIXELCOUNT, 1], stddev = 0.5, dtype = tf.float32))
+        b = tf.Variable(tf.truncated_normal([1], stddev = 0.5, dtype = tf.float32))
+        sess.run(tf.global_variables_initializer())
+
+        MSELoss = calc_MSE(Y, X, W, b, wdc)
+
+        optimizer = tf.train.GradientDescentOptimizer(possibleRates[0])
+        train = optimizer.minimize(MSELoss)
+
+        for i in range(iterations):
+            batchIndicator = (i % numB[0]) * possibleB[0]
+
+            #since we want to consider epochs, we don't be taking random
+            #indices rather, will be grabing batches of size B = 500, sliding
+            #over the data set each iteration
+            currData, currTarget = trainData[batchIndicator:batchIndicator + possibleB[0]], \
+                                trainTarget[batchIndicator:batchIndicator + possibleB[0]]
+
+            sess.run(train, feed_dict = {X: currData, Y: currTarget})
+
+        weightList.append(W)
+        biasList.append(b)
+        wdcLosses[wdcIndicator] = sess.run(MSELoss, feed_dict = {X: currData, Y: currTarget})
+
+        #since dealing with class betwen 0 and 1, will use 0.5 as threshold
+        hypothesis = (tf.matmul(X,W) + b)
+        classified = tf.to_float(tf.greater(hypothesis, 0.5))
+        numCorrect = tf.reduce_sum(tf.to_float(tf.equal(tf.to_float(validTarget), classified)))
+        validAccuracy = sess.run(numCorrect / validTarget.shape[0] * 100, feed_dict = {X: validData})
+        validAccuracies[wdcIndicator] = validAccuracy
+
+        wdcIndicator += 1
+
+    optWDC = np.argmax(validAccuracies)
+    hypothesis = (tf.matmul(X, weightList[optWDC]) + biasList[optWDC])
+    classified = tf.to_float(tf.greater(hypothesis, 0.5))
+    numCorrect = tf.reduce_sum(tf.to_float(tf.equal(tf.to_float(testTarget), classified)))
+    testAccuracy = sess.run(numCorrect / testTarget.shape[0] * 100, feed_dict = {X: testData})
+
+    print("The losses per wdc size:" , \
+        "WDC", possibleWdc[0], ":", "Loss:", wdcLosses[0], ":", "VA", validAccuracies[0], "%", "|", \
+        "WDC", possibleWdc[1], ":", "Loss:", wdcLosses[1], ":", "VA", validAccuracies[1], "%" "|", \
+        "WDC", possibleWdc[2], ":", "Loss:", wdcLosses[2], ":", "VA", validAccuracies[2], "%" "|", \
+        "WDC", possibleWdc[3], ":", "Loss:", wdcLosses[3], ":", "VA", validAccuracies[3], "%" )
+
+    print("The test accuracy for WDC", possibleWdc[optWDC], "is: ", testAccuracy)
 
     #-----------------PART 1.4--------------------------------------------------
     print("\n\n\n\n-----PART 1.4-----\n\n")
+
+    #normal equation w* = (X^T * X + wdcI)^-1 X^T * Y
+    wdc = 0
+    b = tf.Variable(tf.random_normal([PIXELCOUNT]))
+    sess.run(tf.global_variables_initializer())
+
+    start = timeit.timeit()
+
+    WStar = tf.matmul(
+                tf.matrix_inverse(
+                tf.matmul(tf.transpose(X), X)),
+                tf.matmul(tf.transpose(X), Y))
+
+    end = timeit.timeit()
+
+    MSELoss = calc_MSE(Y, X, WStar, b, wdc)
+
+    finalMSE = sess.run(MSELoss, feed_dict = {X: trainData, Y: trainTarget})
+    time = abs(end-start) #/ batchTime[0]
+    hypothesis = (tf.matmul(X, WStar) + b)
+    classified = tf.to_float(tf.greater(hypothesis, 0.5))
+    numCorrect = tf.reduce_sum(tf.to_float(tf.equal(tf.to_float(trainTarget), classified)))
+    trainAccuracy = sess.run(numCorrect / trainTarget.shape[0] * 100, feed_dict = {X: trainData, Y: trainTarget}) / 1000
+
+
+    print("Final Loss:", finalMSE, "|", \
+            "Train Accuracy: ", trainAccuracy, "|", \
+            "Computation Time:", time)
 
     return
 
