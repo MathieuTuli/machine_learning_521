@@ -239,9 +239,10 @@ def logisticRegression():
     plt.xlabel("Prediction yhat")
     plt.ylabel("Loss")
     plt.legend(loc='best', shadow = True, fancybox = True)
+    plt.title("MSE and Cross Entropy Loss vs Prediction")    
     plt.show()
 
     
 if __name__ == '__main__':
-    print('\n\n\n---------Assignment 2.1.1---------\n\n')
+    print('\n\n\n---------Assignment 2.1.3---------\n\n')
     logisticRegression()
