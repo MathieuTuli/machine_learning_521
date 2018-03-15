@@ -1,4 +1,4 @@
-#______ECE521 Assignment 1______
+#______ECE521 Assignment 2______
 #______DUE: March 16, 2018______
 
 from __future__ import print_function
@@ -6,6 +6,7 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+import timeit
 
 sess = tf.Session()
 PIXELCOUNT = 28*28
@@ -34,51 +35,126 @@ def load_data():
         testData = np.reshape(testData, (testData.shape[0],-1))
         return trainData, trainTarget, validData, validTarget, testData, testTarget
 
-def calculateCrossEntropyLoss(y, yHat, W, wdc):
-    ''' y is the target,
-        yHat is the output prediction,
-        lambda (hyperparameter) is the weight decay coefficient
+def calc_MSE(Y, X, W, b, wdc):
+    hypothesis = (tf.transpose(W) * X) + b
+    Ld = 0.5 * tf.reduce_mean(
+                tf.square(hypothesis - Y))
 
-        Cross Entropy Loss = Ld + Lw
-    '''
-
-    Ld = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels = y, logits = yHat))
     Lw = (wdc / 2) * tf.reduce_sum(tf.square(W))
-    crossEntropyLoss = Lw + Ld
-    return crossEntropyLoss
+    return Lw + Ld
 
-def prediction(X, W, b):
-    return tf.matmul(X, W) + b
+def linear_regression():
+    #DEFINE PLACEHOLDERS
+    X = tf.placeholder(tf.float32, name="data")
+    Y = tf.placeholder(tf.float32, name="target")
+    W = tf.Variable(tf.random_normal([PIXELCOUNT]))
+    b = tf.Variable(tf.random_normal([PIXELCOUNT]))
 
-def _1():
-    #define placeholders
-    trainX = tf.placeholder(tf.float64, shape = [None, PIXELCOUNT], name = "trainData")
-    trainY = tf.placeholder(tf.float64, shape = [None, 1], name = "trainTarget")
-    validationX = tf.placeholder(tf.float64, shape = [None, PIXELCOUNT], name = "validationData")
-    validationY = tf.placeholder(tf.float64, shape = [None, 1], name = "validationTarget")
-    testX = tf.placeholder(tf.float64, name="testData")
-    testY = tf.placeholder(tf.float64, name = "testTarget")
-    b = tf.Variable(tf.truncated_normal(shape = [1], stddev = 0.1, dtype = tf.float64, name = "biases"))
-    W = tf.Variable(tf.truncated_normal([PIXELCOUNT, 1], stddev = 0.5, dtype = tf.float64, name = "weights"))
-
-    #Initialize
+    #INITIALIZE
     sess.run(tf.global_variables_initializer())
 
-    #other variables
+    #GENERAL VARIABLES
     trainData, trainTarget, validData, validTarget, testData, testTarget = load_data()
 
-    numTrainingSamples = trainData.shape[0]
-    numValidationSamples = validData.shape[0]
-    numTestSamples = testData.shape[0]
+    sizeTrainData = trainData.shape[0]
+    sizeValidationData = validData.shape[0]
+    sizeTestData = testData.shape[0]
 
     possibleB = [500, 1500, 3500]
+    numB = [sizeTrainData // possibleB[0],
+                sizeTrainData // possibleB[1],
+                    sizeTrainData // possibleB[2]]
     possibleWdc = [0., 0.001, 0.1, 1]
-    iterations = 20000
-    learning_rates = [0.005, 0.001, 0.0001]
+    iterations = 500
+    possibleRates = [0.005, 0.001, 0.0001]
 
-    indices = np.arange(0, numTrainingSamples)
+    MSELoss = calc_MSE(Y, X, W, b, possibleWdc[0])
+    #-----------------PART 1.1--------------------------------------------------
+    print("\n-----PART 1.1-----\n\n")
+    #variables specigic to PART 1.1:
+    rateLosses = [0.,0.,0.]
+    lossPerIter = np.zeros(iterations)
 
-    # optimizer = tf.train.GradientDescentOptimizer(learning_rate = learningRate)
+    rateIndicator = 0
+    for rate in possibleRates:
+        print("Rate:", rate)
+        optimizer = tf.train.GradientDescentOptimizer(rate)
+        train = optimizer.minimize(MSELoss)
+
+        numEpochs = 0
+        for i in range(iterations):
+            batchIndicator = (i % numB[0]) * possibleB[0]
+
+            #since we want to consider epochs, we don't be taking random
+            #indices rather, will be grabing batches of size B = 500, sliding
+            #over the data set each iteration
+            currData, currTarget = trainData[batchIndicator:batchIndicator + possibleB[0]], \
+                                trainTarget[batchIndicator:batchIndicator + possibleB[0]]
+
+            sess.run(train, feed_dict = {X: currData, Y: currTarget})
+            lossPerIter[i] = sess.run(MSELoss, feed_dict = {X: currData, Y: currTarget})
+
+            if((i % (sizeTrainData)) == 0):
+                numEpochs += 1
+                print("Epoch:", numEpochs, "| Loss:", lossPerIter[i])
+        rateLosses[rateIndicator] = lossPerIter[iterations - 1]
+        rateIndicator += 1
+
+    print("\nThe losses per learning rate:" , \
+        "Rate:", possibleRates[0], ":", "Loss:", rateLosses[0], "|", \
+        "Rate:", possibleRates[1], ":", "Loss:", rateLosses[1], "|", \
+        "Rate:", possibleRates[2], ":", "Loss:", rateLosses[2])
+
+    optRate = possibleRates[np.argmin(rateLosses)]
+    print("\nOptimal rate:", optRate)
+    #-----------------PART 1.2--------------------------------------------------
+    print("\n\n\n\n-----PART 1.2-----\n\n")
+    batchLosses = [0.,0.,0.]
+    batchTime = [0., 0., 0.]
+    lossPerBatch = np.zeros(iterations)
+    batchSizeIndicator = 0
+
+    for sizeB in possibleB:
+        start = timeit.timeit()
+
+        optimizer = tf.train.GradientDescentOptimizer(optRate)
+        train = optimizer.minimize(MSELoss)
+
+        for i in range(iterations):
+            batchIndicator = (i % numB[batchSizeIndicator]) * sizeB
+
+            #since we want to consider epochs, we don't be taking random
+            #indices rather, will be grabing batches of size B = 500, sliding
+            #over the data set each iteration
+            currData, currTarget = trainData[batchIndicator:batchIndicator + possibleB[0]], \
+                                trainTarget[batchIndicator:batchIndicator + possibleB[0]]
+
+            sess.run(train, feed_dict = {X: currData, Y: currTarget})
+            lossPerBatch[i] = sess.run(MSELoss, feed_dict = {X: currData, Y: currTarget})
+
+        batchLosses[batchSizeIndicator] = lossPerBatch[iterations - 1]
+        end = timeit.timeit()
+        batchTime[batchSizeIndicator] = end - start
+        batchSizeIndicator += 1
+
+    print("The losses per batch size:" , \
+        "Batch size", possibleB[0], ":", "Loss:", batchLosses[0], "|", \
+        "Batch size", possibleB[1], ":", "Loss:", batchLosses[1], "|", \
+        "Batch size", possibleB[2], ":", "Loss:", batchLosses[2])
+
+    batchTime = [   batchTime[0] / batchTime[0], \
+                    batchTime[1] / batchTime[0], \
+                    batchTime[2] / batchTime[0]]
+    print("\nBatch times as ratio of B = 500 time:", \
+        "Batch size", possibleB[0], ":", "Time:", batchTime[0], "|", \
+        "Batch size", possibleB[1], ":", "Time:", batchTime[1], "|", \
+        "Batch size", possibleB[2], ":", "Time:", batchTime[2])
+
+    #-----------------PART 1.3--------------------------------------------------
+    print("\n\n\n\n-----PART 1.3-----\n\n")
+
+    #-----------------PART 1.4--------------------------------------------------
+    print("\n\n\n\n-----PART 1.4-----\n\n")
 
     return
 
@@ -86,4 +162,4 @@ if __name__ == '__main__':
     #serves no other purpose other than to provide spacing from cpu compilation
     #suggestion messages that pop up
     print('\n\n\n---------Assignment 1---------\n\n')
-    _1()
+    linear_regression()
