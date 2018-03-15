@@ -37,8 +37,8 @@ def load_data():
 
 def calc_MSE(Y, X, W, b, wdc):
     hypothesis = tf.matmul(X,W) + b
-    Ld = 0.5 * tf.reduce_mean(
-                tf.square(hypothesis - Y))
+    Ld = tf.reduce_mean(tf.reduce_mean(
+                tf.square(hypothesis - Y), 1))
 
     Lw = (wdc / 2) * tf.reduce_sum(tf.square(W))
     return Lw + Ld
@@ -66,6 +66,11 @@ def linear_regression():
     iterations = 20000
     possibleRates = [0.005, 0.001, 0.0001]
 
+    indices = np.arange(0, sizeTrainData)
+    shuffledTrainingData = []
+    shuffledTrainingTarget = []
+
+
     #-----------------PART 1.1--------------------------------------------------
     print("\n-----PART 1.1-----\n\n")
     #variables specigic to PART 1.1:
@@ -84,6 +89,10 @@ def linear_regression():
         optimizer = tf.train.GradientDescentOptimizer(rate)
         train = optimizer.minimize(MSELoss)
 
+        np.random.shuffle(indices)
+        shuffledTrainingData = trainData[indices]
+        shuffledTrainingTarget = trainTarget[indices]
+
         numEpochs = 0
         for i in range(iterations):
             batchIndicator = (i % numB[0]) * possibleB[0]
@@ -91,20 +100,22 @@ def linear_regression():
             #since we want to consider epochs, we don't be taking random
             #indices rather, will be grabing batches of size B = 500, sliding
             #over the data set each iteration
-            currData, currTarget = trainData[batchIndicator:batchIndicator + possibleB[0]], \
-                                trainTarget[batchIndicator:batchIndicator + possibleB[0]]
+            #also shuffle it
+            currData, currTarget = shuffledTrainingData[batchIndicator:batchIndicator + possibleB[0]], \
+                                shuffledTrainingTarget[batchIndicator:batchIndicator + possibleB[0]]
 
             sess.run(train, feed_dict = {X: currData, Y: currTarget})
+
             lossPerIter[i] = sess.run(MSELoss, feed_dict = {X: currData, Y: currTarget})
 
             # print("Epoch:", numEpochs, "| Loss:", lossPerIter[i])
             # numEpochs += 1
         print("Epoch:", numEpochs, "| Loss:", lossPerIter[iterations - 1])
         #plot
-        steps = np.linspace(0, iterations, num=iterations)
+        steps = np.linspace(0, iterations, iterations)
         fig = plt.figure()
-        plt.plot(steps, lossPerIter, "c-")
-        plt.xlabel("STEPS")
+        plt.plot(steps, lossPerIter, '.')
+        plt.xlabel("STEPS (1 EPOCH = 7 STEPS)")
         plt.ylabel("LOSS PER STEP")
         fig.savefig(str(rate) + "_1_1.png")
 
@@ -131,6 +142,10 @@ def linear_regression():
         sess.run(tf.global_variables_initializer())
         MSELoss = calc_MSE(Y, X, W, b, possibleWdc[0])
 
+        np.random.shuffle(indices)
+        shuffledTrainingData = trainData[indices]
+        shuffledTrainingTarget = trainTarget[indices]
+
         start = timeit.timeit()
 
         optimizer = tf.train.GradientDescentOptimizer(optRate)
@@ -139,14 +154,15 @@ def linear_regression():
         for i in range(iterations):
             batchIndicator = (i % numB[batchSizeIndicator]) * sizeB
 
-            currData, currTarget = trainData[batchIndicator:batchIndicator + sizeB], \
-                                trainTarget[batchIndicator:batchIndicator + sizeB]
+            currData, currTarget = shuffledTrainingData[batchIndicator:batchIndicator + sizeB], \
+                                shuffledTrainingTarget[batchIndicator:batchIndicator + sizeB]
 
             sess.run(train, feed_dict = {X: currData, Y: currTarget})
 
         end = timeit.timeit()
         batchLosses[batchSizeIndicator] = sess.run(MSELoss, feed_dict = {X: currData, Y: currTarget})
         batchTime[batchSizeIndicator] = abs(end - start)
+
         batchSizeIndicator += 1
 
     print("The losses per batch size:" , \
@@ -154,11 +170,18 @@ def linear_regression():
         "Batch size", possibleB[1], ":", "Loss:", batchLosses[1], "|", \
         "Batch size", possibleB[2], ":", "Loss:", batchLosses[2])
 
-    print("\nBatch times as ratio of B = 500 time:", \
+    print("\nBatch times:", \
         "Batch size", possibleB[0], ":", "Time:", batchTime[0], "|", \
         "Batch size", possibleB[1], ":", "Time:", batchTime[1], "|", \
         "Batch size", possibleB[2], ":", "Time:", batchTime[2])
 
+    batchTime = [batchTime[0] / batchTime[0], \
+                    batchTime[1] / batchTime[0], \
+                    batchTime[2] / batchTime[0]]
+    print("\nBatch times as ratio B = 500:", \
+        "Batch size", possibleB[0], ":", "Time:", batchTime[0], "|", \
+        "Batch size", possibleB[1], ":", "Time:", batchTime[1], "|", \
+        "Batch size", possibleB[2], ":", "Time:", batchTime[2])
     #-----------------PART 1.3--------------------------------------------------
     print("\n\n\n\n-----PART 1.3-----\n\n")
     #variables specigic to PART 1.3:
@@ -176,17 +199,18 @@ def linear_regression():
 
         MSELoss = calc_MSE(Y, X, W, b, wdc)
 
+        np.random.shuffle(indices)
+        shuffledTrainingData = trainData[indices]
+        shuffledTrainingTarget = trainTarget[indices]
+
         optimizer = tf.train.GradientDescentOptimizer(possibleRates[0])
         train = optimizer.minimize(MSELoss)
 
         for i in range(iterations):
             batchIndicator = (i % numB[0]) * possibleB[0]
 
-            #since we want to consider epochs, we don't be taking random
-            #indices rather, will be grabing batches of size B = 500, sliding
-            #over the data set each iteration
-            currData, currTarget = trainData[batchIndicator:batchIndicator + possibleB[0]], \
-                                trainTarget[batchIndicator:batchIndicator + possibleB[0]]
+            currData, currTarget = shuffledTrainingData[batchIndicator:batchIndicator + possibleB[0]], \
+                                shuffledTrainingTarget[batchIndicator:batchIndicator + possibleB[0]]
 
             sess.run(train, feed_dict = {X: currData, Y: currTarget})
 
@@ -237,7 +261,7 @@ def linear_regression():
     MSELoss = calc_MSE(Y, X, WStar, b, wdc)
 
     finalMSE = sess.run(MSELoss, feed_dict = {X: trainData, Y: trainTarget})
-    time = abs(end-start) #/ batchTime[0]
+    time = abs(end-start) / batchTime[0]
     hypothesis = (tf.matmul(X, WStar) + b)
     classified = tf.to_float(tf.greater(hypothesis, 0.5))
     numCorrect = tf.reduce_sum(tf.to_float(tf.equal(tf.to_float(trainTarget), classified)))
