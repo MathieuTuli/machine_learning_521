@@ -127,6 +127,8 @@ def logisticRegression():
     testAccuracyPerEpochLinearRegression = []
 
     trainingAccuracyPerEpochLogisticRegression = []
+    validationAccuraryPerEpochLogisticRegression = []
+    testAccuracyPerEpochLogisticRegression = []
 
     # Create an array of indices from 0 to 3499
     # Useful for random selection of incides for a batch
@@ -164,6 +166,8 @@ def logisticRegression():
         tempTestAccuracyLinearRegression = sess.run(classificationAccuracyLinearRegression, feed_dict={dataX: testData, targetY: testTarget})
 
         tempTrainingAccuracyLogisticRegression = sess.run(classificationAccuracyLogisticRegression, feed_dict={dataX: batchData, targetY: batchTarget})
+        tempValidationAccuracyLogisticRegression = sess.run(classificationAccuracyLogisticRegression, feed_dict={dataX: validData, targetY: validTarget})
+        tempTestAccuracyLogisticRegression = sess.run(classificationAccuracyLogisticRegression, feed_dict={dataX: testData, targetY: testTarget})
 
         # i.e at every epoch find the training, validation, and classification accuracy
         if ((i+1) % numBatches) == 0:
@@ -175,20 +179,26 @@ def logisticRegression():
             testAccuracyPerEpochLinearRegression.append(tempTestAccuracyLinearRegression)
 
             trainingAccuracyPerEpochLogisticRegression.append(tempTrainingAccuracyLogisticRegression)
+            validationAccuraryPerEpochLogisticRegression.append(tempValidationAccuracyLogisticRegression)
+            testAccuracyPerEpochLogisticRegression.append(tempTestAccuracyLogisticRegression)
+
+    print(max(trainingAccuracyPerEpochLinearRegression), max(validationAccuraryPerEpochLinearRegression), max(testAccuracyPerEpochLinearRegression))
+    print(max(trainingAccuracyPerEpochLogisticRegression), max(validationAccuraryPerEpochLogisticRegression), max(testAccuracyPerEpochLogisticRegression))
 
     epochs = np.linspace(0, numEpochs, num = numEpochs)
 
+    # DON'T HAVE TO PLOT THIS BUT HAVE IT JUST IN CASE
     # Linear Regression: Training, Validation and Test Accuracy vs Number of Epochs
-    figure = plt.figure()
-    axes = plt.gca()
-    plt.plot(epochs, trainingAccuracyPerEpochLinearRegression, "b-", label = 'Training Acc')
-    plt.plot(epochs, validationAccuraryPerEpochLinearRegression, "r-", label = 'Validation Acc')
-    plt.plot(epochs, testAccuracyPerEpochLinearRegression, "g-", label = 'Test Acc')
-    plt.xlabel("Number of epochs")
-    plt.ylabel("Accuracy")
-    plt.legend(loc='best', shadow = True, fancybox = True)
-    plt.title("Linear Regression: Training, Validation and Test Accuracy vs Number of Epochs")    
-    plt.show()
+    # figure = plt.figure()
+    # axes = plt.gca()
+    # plt.plot(epochs, trainingAccuracyPerEpochLinearRegression, "b-", label = 'Training Acc')
+    # plt.plot(epochs, validationAccuraryPerEpochLinearRegression, "r-", label = 'Validation Acc')
+    # plt.plot(epochs, testAccuracyPerEpochLinearRegression, "g-", label = 'Test Acc')
+    # plt.xlabel("Number of epochs")
+    # plt.ylabel("Accuracy")
+    # plt.legend(loc='best', shadow = True, fancybox = True)
+    # plt.title("Linear Regression: Training, Validation and Test Accuracy vs Number of Epochs")    
+    # plt.show()
 
     # Training Loss for Linear/Logistic Regression vs Num of Epochs
     figure = plt.figure()
@@ -196,7 +206,7 @@ def logisticRegression():
     plt.plot(epochs, trainingLossPerEpochLinearRegression, "b-", label = 'Linear Regression Loss')
     plt.plot(epochs, trainingLossPerEpochLogisticRegression, "r-", label = 'Logistic Regression Loss')
     plt.xlabel("Number of epochs")
-    plt.ylabel("Accuracy")
+    plt.ylabel("Loss")
     plt.legend(loc='best', shadow = True, fancybox = True)
     plt.title("Training Loss for Linear/Logistic Regression vs Num of Epochs")    
     plt.show()
@@ -211,6 +221,26 @@ def logisticRegression():
     plt.legend(loc='best', shadow = True, fancybox = True)
     plt.title("Training Accuracy for Linear/Logistic Regression vs Num of Epochs")    
     plt.show()
+
+    # Plotting dummy target = 0 for 100 points in prediction interval [0, 1]
+    dummyTargetY = tf.zeros(100, tf.float64)
+    dummyYHat = np.linspace(0.0, 1.0, num = 100)
+
+    dummyMSEPointWise = tf.square(dummyYHat - dummyTargetY)
+    dummyCrossEntropyErrorPointWise = tf.nn.sigmoid_cross_entropy_with_logits(logits = dummyTargetY, labels = dummyYHat)
+
+    MSE = sess.run(dummyMSEPointWise)
+    CE = sess.run(dummyCrossEntropyErrorPointWise)
+
+    figure = plt.figure()
+    axes = plt.gca()
+    plt.plot(dummyYHat, MSE, "r-", label= "Mean-Squared Loss")
+    plt.plot(dummyYHat, CE, "b-", label= "Cross Entropy Loss")
+    plt.xlabel("Prediction yhat")
+    plt.ylabel("Loss")
+    plt.legend(loc='best', shadow = True, fancybox = True)
+    plt.show()
+
     
 if __name__ == '__main__':
     print('\n\n\n---------Assignment 2.1.1---------\n\n')

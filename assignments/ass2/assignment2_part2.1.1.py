@@ -80,36 +80,6 @@ def logisticRegression():
     testX = tf.placeholder(tf.float64, name="testData")
     testY = tf.placeholder(tf.float64, name = "testTarget")
     
-    b = tf.Variable(tf.truncated_normal(shape = [1], stddev = 0.1, dtype = tf.float64, name = "biases"))
-    W = tf.Variable(tf.truncated_normal([PIXELCOUNT, 1], stddev = 0.5, dtype = tf.float64, name = "weights"))
-
-    # Initialize variables
-    sess.run(tf.global_variables_initializer())
-
-    # Training data prediction and loss
-    trainYHat = prediction(trainX, W, b)
-    trainingLoss = calculateCrossEntropyLoss(trainY, trainYHat, W, wdc)
-
-    # Setup gradient descent optimizer and oprimize the training loss
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate = learningRate)
-    train = optimizer.minimize(trainingLoss)
-
-    # At this point we have our weight vector W
-    # Use W to calculate validation prediction and loss 
-    # This data is useful for tuning our learning rate
-    validationYHat = prediction(validationX, W, b)
-    validationLoss = calculateCrossEntropyLoss(validationY, validationYHat, W, wdc)
-
-    # Calculate classification accuracy
-    # Use a threshold of 0.5, values above are classified as 1
-    # Values below are classified as 0
-    outputVector = tf.sigmoid(tf.matmul(testX, W) + b)
-    booleanClassificationVector = tf.greater(outputVector, 0.5)
-    integerClassificationVector = tf.cast(booleanClassificationVector, tf.float64)
-    correctClassificationVector = tf.cast(tf.equal(integerClassificationVector, testY), tf.float64)
-    numCorrectClassified = tf.reduce_sum(correctClassificationVector)
-    classificationAccuracy = ( tf.cast(numCorrectClassified, tf.float64) / tf.cast(tf.shape(correctClassificationVector)[0], tf.float64)) * 100
-    
     learningRateArray = [0.005, 0.001, 0.0001]
     learningRateErrorsArray = []
 
@@ -142,6 +112,36 @@ def logisticRegression():
         trainingAccuracyArray = []
         validationAccuraryArray = []
         testAccuracyArray = []
+
+        b = tf.Variable(tf.truncated_normal(shape = [1], stddev = 0.1, dtype = tf.float64, name = "biases"))
+        W = tf.Variable(tf.truncated_normal([PIXELCOUNT, 1], stddev = 0.5, dtype = tf.float64, name = "weights"))
+
+        # Initialize variables
+        sess.run(tf.global_variables_initializer())
+
+        # Training data prediction and loss
+        trainYHat = prediction(trainX, W, b)
+        trainingLoss = calculateCrossEntropyLoss(trainY, trainYHat, W, wdc)
+
+        # Setup gradient descent optimizer and oprimize the training loss
+        optimizer = tf.train.GradientDescentOptimizer(learning_rate = learningRate)
+        train = optimizer.minimize(trainingLoss)
+
+        # At this point we have our weight vector W
+        # Use W to calculate validation prediction and loss 
+        # This data is useful for tuning our learning rate
+        validationYHat = prediction(validationX, W, b)
+        validationLoss = calculateCrossEntropyLoss(validationY, validationYHat, W, wdc)
+
+        # Calculate classification accuracy
+        # Use a threshold of 0.5, values above are classified as 1
+        # Values below are classified as 0
+        outputVector = tf.sigmoid(tf.matmul(testX, W) + b)
+        booleanClassificationVector = tf.greater(outputVector, 0.5)
+        integerClassificationVector = tf.cast(booleanClassificationVector, tf.float64)
+        correctClassificationVector = tf.cast(tf.equal(integerClassificationVector, testY), tf.float64)
+        numCorrectClassified = tf.reduce_sum(correctClassificationVector)
+        classificationAccuracy = ( tf.cast(numCorrectClassified, tf.float64) / tf.cast(tf.shape(correctClassificationVector)[0], tf.float64)) * 100
 
         for i in range(numIterations):
 
@@ -180,7 +180,7 @@ def logisticRegression():
                 validationAccuraryArray.append(tempValidationAccuracy)
                 testAccuracyArray.append(tempTestAccuracy)
 
-        learningRateErrorsArray.append(sum(tempValidationLossArray))
+        learningRateErrorsArray.append(min(tempTrainingLossArray))
 
         trainingLossPerLearningRatePerEpoch.append(trainingLossArray)
         validationLossPerLearningRatePerEpoch.append(validationLossArray)
@@ -195,18 +195,18 @@ def logisticRegression():
     bestLearningRate = learningRateArray[bestLearningRateIndex]
 
     # Using the best learning rate, find the arrays of best
-    # training loss, validation loss, training accuracy, and validation accuracy
+    # training loss, validation loss, training accuracy, validation accuracy and test accuracy
     bestTrainingLossPerEpoch = trainingLossPerLearningRatePerEpoch[bestLearningRateIndex]
     bestValidationLossPerEpoch = validationLossPerLearningRatePerEpoch[bestLearningRateIndex]
     bestTrainingAccuracyPerEpoch = trainingAccuracyPerLearningRatePerEpoch[bestLearningRateIndex]
-    bestValidationAccuracyPerEpoch =validationAccuraryPerLearningRatePerEpoch[bestLearningRateIndex]
+    bestValidationAccuracyPerEpoch = validationAccuraryPerLearningRatePerEpoch[bestLearningRateIndex]
+    bestTestAccuracyPerEpoch = testAccuracyPerLearningRatePerEpoch[bestLearningRateIndex]
 
     epochs = np.linspace(0, numEpochs, num = numEpochs)
 
     # Plot loss vs number of epochs
     figure = plt.figure()
     axes = plt.gca()
-    # axes.set_ylim([0,0.5])
     plt.plot(epochs, bestTrainingLossPerEpoch, "b-", label = 'Training Loss')
     plt.plot(epochs, bestValidationLossPerEpoch, "r-", label = 'Validation Loss')
     plt.xlabel("Number of epochs")
@@ -226,9 +226,9 @@ def logisticRegression():
     plt.title("Best Training and Validation Accuracy vs Number of Epochs")    
     plt.show()
 
-    # Calculate best test accuracy obtained
-    tempTestAccuracyMax = [max(arr) for arr in testAccuracyPerLearningRatePerEpoch]
-    bestTestAccuracy = max(tempTestAccuracyMax)
+    # Calculate best test accuracy obtained: 98.6206896552
+    bestTestAccuracy = max(bestTestAccuracyPerEpoch)
+    print("Best learning rate is ", bestLearningRate, "and best test accuracy for this rate is", bestTestAccuracy)
 
     
 if __name__ == '__main__':

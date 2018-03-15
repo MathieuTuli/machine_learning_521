@@ -146,13 +146,12 @@ def logisticRegression():
 
     figure = plt.figure()
     axes = plt.gca()
-    axes.set_ylim([0,5])
     plt.plot(epochs, trainingLossPerEpochSGD, "b-", label = 'Training Loss SGD')
     plt.plot(epochs, trainingLossPerEpochAdam, "r-", label = 'Training Loss Adam')
     plt.xlabel("Number of epochs")
     plt.ylabel("Loss")
     plt.legend(loc='best', shadow = True, fancybox = True)
-    plt.title("Best Training Loss vs Number of Epochs for SGD and Adam")    
+    plt.title("Best Training Loss vs Number of Epochs for SGD and Adam Optimizer")    
     plt.show()
     
 if __name__ == '__main__':
