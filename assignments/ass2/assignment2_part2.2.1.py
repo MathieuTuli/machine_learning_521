@@ -222,7 +222,7 @@ def logisticRegression():
     plt.title("Best Training and Validation Accuracy vs Number of Epochs")    
     plt.show()
 
-    # Calculate best test accuracy obtained: 89.5
+    # Calculate best test accuracy obtained: 89.50
     bestTestAccuracy = max(bestTestAccuracyPerEpoch)
     print("Best learning rate is ", bestLearningRate, "and best test accuracy for this rate is", bestTestAccuracy)
 

@@ -50,7 +50,7 @@ def prediction(X, W, b):
 def logisticRegression():
 
     # Variable definitions
-    batchSize = 500
+    batchSize = 300
     numIterations = 5000
     learningRate = 0.005
 
@@ -67,7 +67,7 @@ def logisticRegression():
     numValidationSamples = validData.shape[0]
     numTestSamples = testData.shape[0]
 
-    # i.e numBatches = 15000/500 = 30
+    # i.e numBatches = 747//300 = 2
     numBatches = numTrainingSamples // batchSize
     numEpochs = numIterations // numBatches
 
@@ -233,7 +233,7 @@ def logisticRegression():
     plt.title("Best Training and Validation Accuracy vs Number of Epochs")    
     plt.show()
 
-    # Calculate best test accuracy obtained: 89.5
+    # Calculate best test accuracy obtained: 90.32
     bestTestAccuracy = max(bestTestAccuracyPerEpoch)
     print("Best [learning rate, wdc] is ", bestLearningRate_wdc, "and best test accuracy for this rate is", bestTestAccuracy)
 
