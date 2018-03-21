@@ -105,15 +105,15 @@ def logisticRegression():
     # Calculate classification accuracy for LINEAR REGRESSION
     # Use a threshold of 0.5
     outputVectorLinearRegression = tf.matmul(dataX, WLinearRegression) + bLinearRegression
-    classificationVectorLinearRegression = tf.cast(tf.greater(yHatLinearRegression, 0.5), tf.float64)
+    classificationVectorLinearRegression = tf.cast(tf.greater(outputVectorLinearRegression, 0.5), tf.float64)
     correctClassificationVectorLinearRegression = tf.cast(tf.equal(classificationVectorLinearRegression, targetY), tf.float64)
     numCorrectClassifiedLinearRegression = tf.reduce_sum(correctClassificationVectorLinearRegression)
     classificationAccuracyLinearRegression = ( tf.cast(numCorrectClassifiedLinearRegression, tf.float64) / tf.cast(tf.shape(correctClassificationVectorLinearRegression)[0], tf.float64)) * 100
     
-    # Calculate classification accuracy for LINEAR REGRESSION
+    # Calculate classification accuracy for LOGISTIC REGRESSION
     # Use a threshold of 0.5
-    outputVectorLogisticRegression = tf.matmul(dataX, WLogisticRegression) + bLogisticRegression
-    classificationVectorLogisticRegression = tf.cast(tf.greater(yHatLogisticRegression, 0.5), tf.float64)
+    outputVectorLogisticRegression = tf.sigmoid(tf.matmul(dataX, WLogisticRegression) + bLogisticRegression)
+    classificationVectorLogisticRegression = tf.cast(tf.greater(outputVectorLogisticRegression, 0.5), tf.float64)
     correctClassificationVectorLogisticRegression = tf.cast(tf.equal(classificationVectorLogisticRegression, targetY), tf.float64)
     numCorrectClassifiedLogisticRegression = tf.reduce_sum(correctClassificationVectorLogisticRegression)
     classificationAccuracyLogisticRegression = ( tf.cast(numCorrectClassifiedLogisticRegression, tf.float64) / tf.cast(tf.shape(correctClassificationVectorLogisticRegression)[0], tf.float64)) * 100
