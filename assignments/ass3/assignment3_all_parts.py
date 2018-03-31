@@ -29,7 +29,7 @@ def load_data():
         # testData = np.reshape(testData, (testData.shape[0],-1))
         return trainData, trainTarget, validData, validTarget, testData, testTarget
 
-def linear_regression():
+def neural_network():
     #DEFINE PLACEHOLDERS
     X = tf.placeholder(tf.float32, name="data")
     Y = tf.placeholder(tf.float32, name="target")
