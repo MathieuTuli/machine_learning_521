@@ -27,8 +27,7 @@ def build_layer(inputTensor, numHiddenUnits):
 	weightVectorShape = [numInputs, numHiddenUnits]
 
 	# Variable declaration for Weights and Biases
-	# W = tf.get_variable(dtype = tf.float64, shape = weightVectorShape, initializer = tf.contrib.layers.xavier_initializer(), name = "Weights")
-	W = tf.Variable(tf.random_normal(weightVectorShape, stddev = 3.0 / (numInputs + numHiddenUnits), dtype = tf.float64, name = "Weights"))
+	W = tf.Variable(tf.random_normal(weightVectorShape, stddev = 3.0 / (numInputs + numHiddenUnits), dtype = tf.float64, seed = 521, name = "Weights"))
 	zerosTensor = tf.zeros(dtype = tf.float64, shape = [numHiddenUnits])
 	b = tf.Variable(zerosTensor, name = "Biases")
 
@@ -117,9 +116,9 @@ def neuralNetwork():
 	validationLoss = []
 	testLoss = []
 
-	trainingAccuracy = []
-	validationAccuracy = []
-	testAccuracy = []
+	trainingClassificationError = []
+	validationClassificationError = []
+	testClassificationError = []
 
 	# Create an array of indices from 0 to numTrainingSamples
 	# Useful for random selection of incides for a batch
@@ -134,11 +133,11 @@ def neuralNetwork():
 	for i in range(numIterations):
 
 		# Shuffle indices once every numBatches (30) iterations
-		if not (i % numBatches): 
-			print(i)
-			np.random.shuffle(indices)
-			shuffledTrainingData = trainData[indices]
-			shuffledTrainingTarget = trainTarget[indices]
+		# if not (i % numBatches): 
+		# 	print(i)
+		# 	np.random.shuffle(indices)
+		shuffledTrainingData = trainData[indices]
+		shuffledTrainingTarget = trainTarget[indices]
 
 		startBatchIndex = (i % numBatches) * batchSize
 		endBatchIndex = startBatchIndex + batchSize
@@ -149,17 +148,22 @@ def neuralNetwork():
 
 		sess.run(trainAdam, feed_dict={x0: batchData, y0: batchTarget})
 
+		# For every epoch, get data
 		if ((i+1) % numBatches) == 0:
+			print(i)
 			trainingLoss.append(sess.run(crossEntropyLoss, feed_dict = {x0: batchData, y0: batchTarget}))
 			validationLoss.append(sess.run(crossEntropyLoss, feed_dict = {x0: validData, y0: validTarget}))
 			testLoss.append(sess.run(crossEntropyLoss, feed_dict = {x0: testData, y0: testTarget}))
 
-			trainingAccuracy.append(sess.run(classificationAccuracy, feed_dict = {x0: batchData, y0: batchTarget}))
-			validationAccuracy.append(sess.run(classificationAccuracy, feed_dict = {x0: validData, y0: validTarget}))
-			testAccuracy.append(sess.run(classificationAccuracy, feed_dict = {x0: testData, y0: testTarget}))
+			trainingClassificationError.append(sess.run(classificationAccuracy, feed_dict = {x0: batchData, y0: batchTarget}))
+			validationClassificationError.append(sess.run(classificationAccuracy, feed_dict = {x0: validData, y0: validTarget}))
+			testClassificationError.append(sess.run(classificationAccuracy, feed_dict = {x0: testData, y0: testTarget}))
 
 	print(validationLoss[-1])
-	print(validationAccuracy[-1])
+	print(validationClassificationError[-1])
+
+	print(min(testLoss))
+	print(min(testClassificationError))
 
 	# Plotting
 	epochs = np.linspace(0, numEpochs, num = numEpochs)
@@ -178,10 +182,10 @@ def neuralNetwork():
 	# Plot loss vs number of epochs
 	figure = plt.figure()
 	axes = plt.gca()
-	plt.plot(epochs, trainingAccuracy, "r-", label = 'Training Accuracy')
-	plt.plot(epochs, validationAccuracy, "g-", label = 'Validation Accuracy')
+	plt.plot(epochs, trainingClassificationError, "r-", label = 'Training Classification Error')
+	plt.plot(epochs, validationClassificationError, "g-", label = 'Validation Classification Error')
 	plt.xlabel("Number of epochs")
-	plt.ylabel("Loss")
+	plt.ylabel("Classification Error (%)")
 	plt.legend(loc='best', shadow = True, fancybox = True)
 	plt.title("Training and Validation Accuracy vs Number of Epochs")    
 	plt.show()

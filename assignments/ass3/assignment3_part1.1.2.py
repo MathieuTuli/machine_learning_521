@@ -27,8 +27,7 @@ def build_layer(inputTensor, numHiddenUnits):
 	weightVectorShape = [numInputs, numHiddenUnits]
 
 	# Variable declaration for Weights and Biases
-	# W = tf.get_variable(dtype = tf.float64, shape = weightVectorShape, initializer = tf.contrib.layers.xavier_initializer(), name = "Weights")
-	W = tf.Variable(tf.random_normal(weightVectorShape, stddev = 3.0 / (numInputs + numHiddenUnits), dtype = tf.float64, name = "Weights"))
+	W = tf.Variable(tf.random_normal(weightVectorShape, stddev = 3.0 / (numInputs + numHiddenUnits), dtype = tf.float64, seed = 521, name = "Weights"))
 	zerosTensor = tf.zeros(dtype = tf.float64, shape = [numHiddenUnits])
 	b = tf.Variable(zerosTensor, name = "Biases")
 
@@ -142,11 +141,11 @@ def neuralNetwork():
 		for i in range(numIterations):
 
 			# Shuffle indices once every numBatches (30) iterations
-			if not (i % numBatches): 
-				print(i)
-				np.random.shuffle(indices)
-				shuffledTrainingData = trainData[indices]
-				shuffledTrainingTarget = trainTarget[indices]
+			# if not (i % numBatches): 
+			# 	print(i)
+			# 	np.random.shuffle(indices)
+			shuffledTrainingData = trainData[indices]
+			shuffledTrainingTarget = trainTarget[indices]
 
 			startBatchIndex = (i % numBatches) * batchSize
 			endBatchIndex = startBatchIndex + batchSize
@@ -158,6 +157,7 @@ def neuralNetwork():
 			sess.run(trainAdam, feed_dict={x0: batchData, y0: batchTarget})
 
 			if ((i+1) % numBatches) == 0:
+				print(i)
 				trainingLoss.append(sess.run(crossEntropyLoss, feed_dict = {x0: batchData, y0: batchTarget}))
 				validationLoss.append(sess.run(crossEntropyLoss, feed_dict = {x0: validData, y0: validTarget}))
 				testLoss.append(sess.run(crossEntropyLoss, feed_dict = {x0: testData, y0: testTarget}))
@@ -166,6 +166,9 @@ def neuralNetwork():
 				validationClassificationError.append(sess.run(classificationAccuracy, feed_dict = {x0: validData, y0: validTarget}))
 				testClassificationError.append(sess.run(classificationAccuracy, feed_dict = {x0: testData, y0: testTarget}))
 
+		print(min(testLoss))
+		print(min(testClassificationError))
+
 		trainingLossPerLearningRate.append(trainingLoss)
 		validationLossPerLearningRate.append(validationLoss)
 		testLossPerLearningRate.append(testLoss)
@@ -173,6 +176,7 @@ def neuralNetwork():
 		trainingClassificationErrorPerLearningRate.append(trainingClassificationError)
 		validationClassificationErrorPerLearningRate.append(validationClassificationError)
 		testClassificationErrorPerLearningRate.append(testClassificationError)
+
 
 	# Plotting
 	epochs = np.linspace(0, numEpochs, num = numEpochs)
@@ -204,13 +208,13 @@ def neuralNetwork():
 	# Plot classification accuracy vs number of epochs
 	figure = plt.figure()
 	axes = plt.gca()
-	plt.plot(epochs, trainingClassificationErrorPerLearningRate[0], "r-", label = 'Training Acc')
-	plt.plot(epochs, validationClassificationErrorPerLearningRate[0], "g-", label = 'Validation Acc')
-	plt.plot(epochs, testClassificationErrorPerLearningRate[0], "b-", label = 'Test Acc')
+	plt.plot(epochs, trainingClassificationErrorPerLearningRate[0], "r-", label = 'Training Classification Error')
+	plt.plot(epochs, validationClassificationErrorPerLearningRate[0], "g-", label = 'Validation Classification Error')
+	plt.plot(epochs, testClassificationErrorPerLearningRate[0], "b-", label = 'Test Classification Error')
 	plt.xlabel("Number of epochs")
-	plt.ylabel("Accuracy")
+	plt.ylabel("Classification Error (%)")
 	plt.legend(loc='best', shadow = True, fancybox = True)
-	plt.title("Training, Validation and Test Accuracy vs Number of Epochs")    
+	plt.title("Training, Validation and Test Classification Error vs Number of Epochs")    
 	plt.show()
 
 if __name__ == '__main__':

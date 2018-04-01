@@ -27,8 +27,7 @@ def build_layer(inputTensor, numHiddenUnits):
 	weightVectorShape = [numInputs, numHiddenUnits]
 
 	# Variable declaration for Weights and Biases
-	# W = tf.get_variable(dtype = tf.float64, shape = weightVectorShape, initializer = tf.contrib.layers.xavier_initializer(), name = "Weights")
-	W = tf.Variable(tf.random_normal(weightVectorShape, stddev = 3.0 / (numInputs + numHiddenUnits), dtype = tf.float64, name = "Weights"))
+	W = tf.Variable(tf.random_normal(weightVectorShape, stddev = 3.0 / (numInputs + numHiddenUnits), dtype = tf.float64, seed = 521, name = "Weights"))
 	zerosTensor = tf.zeros(dtype = tf.float64, shape = [numHiddenUnits])
 	b = tf.Variable(zerosTensor, name = "Biases")
 
@@ -84,119 +83,105 @@ def neuralNetwork():
 	x0 = tf.placeholder(dtype = tf.float64, shape = [None, 28*28], name = "Data")
 	y0 = tf.placeholder(dtype = tf.int32, shape = [None], name = "Target")
 
+	# x1 is output of first layer (and input to output later)
+	with tf.variable_scope("hiddenLayer"):
+		x1 = tf.nn.relu(build_layer(x0, numHiddenUnits))
+
+	# sOut is the weighted sum of the output layer which will be fed into softmax
+	with tf.variable_scope("outputLayer"):
+		sOut = build_layer(x1, numClasses)
+
+	# Setup optimizer
+	crossEntropyLoss = calculateCrossEntropyLoss(y0, sOut, wdc)
+	optimizerAdam = tf.train.AdamOptimizer(learning_rate = learningRate)
+	trainAdam = optimizerAdam.minimize(crossEntropyLoss)
+
+	# Send sOut into softmax and get output of the last/output later
+	# This is nothing by the final classification of the image
+	x2 = tf.nn.softmax(sOut)
+	classification = tf.cast(tf.equal(tf.argmax(x2, 1), tf.cast(y0, tf.int64)), tf.float32)
+	classificationAccuracy = tf.subtract(1.0, tf.reduce_mean(classification)) * 100
+
+	sess.run(tf.global_variables_initializer())
+	trainSaver = tf.train.Saver()
+
 	# Create an array of indices from 0 to numTrainingSamples
 	# Useful for random selection of incides for a batch
 	indices = np.arange(0, numTrainingSamples)
 	shuffledTrainingData = []
 	shuffledTrainingTarget = []
-
-	learningRateArray = [0.005]
 	
 	# Record data arrays
-	trainingLossPerLearningRate = []
-	validationLossPerLearningRate = []
-	testLossPerLearningRate = []
+	trainingLoss = []
+	validationLoss = []
+	testLoss = []
 
-	trainingClassificationErrorPerLearningRate = []
-	validationClassificationErrorPerLearningRate = []
-	testClassificationErrorPerLearningRate = []
+	trainingClassificationError = []
+	validationClassificationError = []
+	testClassificationError = []
 
 	earlyStoppingValidationLoss = -1
 	earlyStoppingValidationClassificationError = -1
-
-	for rate in learningRateArray:
-		learningRate = rate
-
-		# x1 is output of first layer (and input to output later)
-		with tf.variable_scope("hiddenLayer"):
-			x1 = tf.nn.relu(build_layer(x0, numHiddenUnits))
-
-		# sOut is the weighted sum of the output layer which will be fed into softmax
-		with tf.variable_scope("outputLayer"):
-			sOut = build_layer(x1, numClasses)
-
-		# Setup optimizer
-		crossEntropyLoss = calculateCrossEntropyLoss(y0, sOut, wdc)
-		optimizerAdam = tf.train.AdamOptimizer(learning_rate = learningRate)
-		trainAdam = optimizerAdam.minimize(crossEntropyLoss)
-
-		# Send sOut into softmax and get output of the last/output later
-		# This is nothing by the final classification of the image
-		x2 = tf.nn.softmax(sOut)
-		classification = tf.cast(tf.equal(tf.argmax(x2, 1), tf.cast(y0, tf.int64)), tf.float32)
-		classificationAccuracy = tf.subtract(1.0, tf.reduce_mean(classification)) * 100
-
-		sess.run(tf.global_variables_initializer())
-		trainSaver = tf.train.Saver()
-
-		# Arrays for recording data
-		trainingLoss = []
-		validationLoss = []
-		testLoss = []
-
-		trainingClassificationError = []
-		validationClassificationError = []
-		testClassificationError = []
-
-		epochNumber = 0
-		# numIterations is 6000
-		# batchSize is 500
-		# numBatches is 30 (stays constant)
-		# numEpochs is 6000/30 = 200
-		for i in range(numIterations):
-
-			# Shuffle indices once every numBatches (30) iterations
-			if not (i % numBatches): 
-				# print(i)
-				np.random.shuffle(indices)
-				shuffledTrainingData = trainData[indices]
-				shuffledTrainingTarget = trainTarget[indices]
-
-			startBatchIndex = (i % numBatches) * batchSize
-			endBatchIndex = startBatchIndex + batchSize
-
-			# Obtain a batch of training data from start index to end index
-			batchData = shuffledTrainingData[startBatchIndex : endBatchIndex]
-			batchTarget = shuffledTrainingTarget[startBatchIndex : endBatchIndex]
-
-			sess.run(trainAdam, feed_dict={x0: batchData, y0: batchTarget})
-
-			if ((i+1) % numBatches) == 0:
-				print(i)
-				epochNumber += 1
-
-				trainingLoss.append(sess.run(crossEntropyLoss, feed_dict = {x0: batchData, y0: batchTarget}))
-				validationLoss.append(sess.run(crossEntropyLoss, feed_dict = {x0: validData, y0: validTarget}))
-				testLoss.append(sess.run(crossEntropyLoss, feed_dict = {x0: testData, y0: testTarget}))
-
-				trainingClassificationError.append(sess.run(classificationAccuracy, feed_dict = {x0: batchData, y0: batchTarget}))
-				validationClassificationError.append(sess.run(classificationAccuracy, feed_dict = {x0: validData, y0: validTarget}))
-				testClassificationError.append(sess.run(classificationAccuracy, feed_dict = {x0: testData, y0: testTarget}))
-
-				if epochNumber >= 4 and earlyStoppingValidationLoss is -1:
-					fiveValidationLoss = validationLoss[(epochNumber-4): (epochNumber+1)]
-
-					if (sorted(fiveValidationLoss) == fiveValidationLoss):
-						earlyStoppingValidationLoss = epochNumber
-						print("Early stopping epoch number (Validation loss) is ", epochNumber)
-
-				if epochNumber >= 4 and earlyStoppingValidationClassificationError is -1:
-					fiveValidationClassificationError = validationClassificationError[(epochNumber-4) : (epochNumber+1)]
-
-					if (sorted(fiveValidationClassificationError) == fiveValidationClassificationError):
-						earlyStoppingValidationClassificationError = epochNumber
-						print("Early stopping epoch number (Validation Classification Error) is ", epochNumber)
 		
-		trainingLossPerLearningRate.append(trainingLoss)
-		validationLossPerLearningRate.append(validationLoss)
-		testLossPerLearningRate.append(testLoss)
+	epochNumber = 0
+	# numIterations is 6000
+	# batchSize is 500
+	# numBatches is 30 (stays constant)
+	# numEpochs is 6000/30 = 200
+	for i in range(numIterations):
 
-		trainingClassificationErrorPerLearningRate.append(trainingClassificationError)
-		validationClassificationErrorPerLearningRate.append(validationClassificationError)
-		testClassificationErrorPerLearningRate.append(testClassificationError)
+		# Shuffle indices once every numBatches (30) iterations
+		# if not (i % numBatches): 
+		# 	# print(i)
+		# 	np.random.shuffle(indices)
+		shuffledTrainingData = trainData[indices]
+		shuffledTrainingTarget = trainTarget[indices]
+
+		startBatchIndex = (i % numBatches) * batchSize
+		endBatchIndex = startBatchIndex + batchSize
+
+		# Obtain a batch of training data from start index to end index
+		batchData = shuffledTrainingData[startBatchIndex : endBatchIndex]
+		batchTarget = shuffledTrainingTarget[startBatchIndex : endBatchIndex]
+
+		sess.run(trainAdam, feed_dict={x0: batchData, y0: batchTarget})
+
+		# For every epoch, get data
+		if ((i+1) % numBatches) == 0:
+			print(i)
+			epochNumber += 1
+
+			trainingLoss.append(sess.run(crossEntropyLoss, feed_dict = {x0: batchData, y0: batchTarget}))
+			validationLoss.append(sess.run(crossEntropyLoss, feed_dict = {x0: validData, y0: validTarget}))
+			testLoss.append(sess.run(crossEntropyLoss, feed_dict = {x0: testData, y0: testTarget}))
+
+			trainingClassificationError.append(sess.run(classificationAccuracy, feed_dict = {x0: batchData, y0: batchTarget}))
+			validationClassificationError.append(sess.run(classificationAccuracy, feed_dict = {x0: validData, y0: validTarget}))
+			testClassificationError.append(sess.run(classificationAccuracy, feed_dict = {x0: testData, y0: testTarget}))
+
+			# Early stopping point calculation
+			# i.e check if any 5 consecutive points (for validation loss/classification error) 
+			# in the epoch are in ascending order
+			if epochNumber >= 5 and earlyStoppingValidationLoss is -1:
+				fiveValidationLoss = validationLoss[(epochNumber-5): (epochNumber)]
+
+				if (sorted(fiveValidationLoss) == fiveValidationLoss):
+					earlyStoppingValidationLoss = epochNumber
+					print("Early stopping epoch number (Validation loss) is ", epochNumber)
+
+			if epochNumber >= 5 and earlyStoppingValidationClassificationError is -1:
+				fiveValidationClassificationError = validationClassificationError[(epochNumber-5) : (epochNumber)]
+
+				if (sorted(fiveValidationClassificationError) == fiveValidationClassificationError):
+					earlyStoppingValidationClassificationError = epochNumber
+					print("Early stopping epoch number (Validation Classification Error) is ", epochNumber)
 
 	print(earlyStoppingValidationLoss)
 	print(earlyStoppingValidationClassificationError)
+
+	print("Training classification error at ESP", trainingClassificationError[earlyStoppingValidationClassificationError])
+	print("Validation classification error at ESP", validationClassificationError[earlyStoppingValidationClassificationError])
+	print("Test classification error at ESP", testClassificationError[earlyStoppingValidationClassificationError])
 
 	# Plotting
 	epochs = np.linspace(0, numEpochs, num = numEpochs)
@@ -204,9 +189,9 @@ def neuralNetwork():
     # Plot loss vs number of epochs
 	figure = plt.figure()
 	axes = plt.gca()
-	plt.plot(epochs, trainingLossPerLearningRate[0], "r-", label = 'Training Loss')
-	plt.plot(epochs, validationLossPerLearningRate[0], "g-", label = 'Validation Loss')
-	plt.plot(epochs, testLossPerLearningRate[0], "b-", label = 'Test Loss')
+	plt.plot(epochs, trainingLoss, "r-", label = 'Training Loss')
+	plt.plot(epochs, validationLoss, "g-", label = 'Validation Loss')
+	plt.plot(epochs, testLoss, "b-", label = 'Test Loss')
 	plt.axvline(x = earlyStoppingValidationLoss, color = "k", linestyle='--', label='Early Stopping Point')
 	plt.xlabel("Number of epochs")
 	plt.ylabel("Loss")
@@ -217,14 +202,14 @@ def neuralNetwork():
 	# Plot classification error vs number of epochs
 	figure = plt.figure()
 	axes = plt.gca()
-	plt.plot(epochs, trainingClassificationErrorPerLearningRate[0], "r-", label = 'Training Acc')
-	plt.plot(epochs, validationClassificationErrorPerLearningRate[0], "g-", label = 'Validation Acc')
-	plt.plot(epochs, testClassificationErrorPerLearningRate[0], "b-", label = 'Test Acc')
+	plt.plot(epochs, trainingClassificationError, "r-", label = 'Training Classification Error')
+	plt.plot(epochs, validationClassificationError, "g-", label = 'Validation Classification Error')
+	plt.plot(epochs, testClassificationError, "b-", label = 'Test Classification Error')
 	plt.axvline(x = earlyStoppingValidationClassificationError, c = "k", linestyle='--', label='Early Stopping Point')
 	plt.xlabel("Number of epochs")
-	plt.ylabel("Accuracy")
+	plt.ylabel("Classification Error (%)")
 	plt.legend(loc='best', shadow = True, fancybox = True)
-	plt.title("Training, Validation and Test Accuracy vs Number of Epochs")    
+	plt.title("Training, Validation and Test Classification Error vs Number of Epochs")    
 	plt.show()
 
 if __name__ == '__main__':
