@@ -145,7 +145,7 @@ def neuralNetwork():
 
 			sess.run(trainAdam, feed_dict={x0: batchData, y0: batchTarget})
 
-			if not startBatchIndex:
+			if ((i+1) % numBatches) == 0:
 				validationLoss.append(sess.run(crossEntropyLoss, feed_dict = {x0: validData, y0: validTarget}))
 				testClassificationError.append(sess.run(classificationAccuracy, feed_dict = {x0: testData, y0: testTarget}))
 

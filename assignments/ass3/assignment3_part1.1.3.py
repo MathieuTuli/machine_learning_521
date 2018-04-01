@@ -90,7 +90,7 @@ def neuralNetwork():
 	shuffledTrainingData = []
 	shuffledTrainingTarget = []
 
-	learningRateArray = [0.005, 0.001, 0.0001]
+	learningRateArray = [0.005]
 	
 	# Record data arrays
 	trainingLossPerLearningRate = []
@@ -100,6 +100,9 @@ def neuralNetwork():
 	trainingClassificationErrorPerLearningRate = []
 	validationClassificationErrorPerLearningRate = []
 	testClassificationErrorPerLearningRate = []
+
+	earlyStoppingValidationLoss = -1
+	earlyStoppingValidationClassificationError = -1
 
 	for rate in learningRateArray:
 		learningRate = rate
@@ -135,6 +138,7 @@ def neuralNetwork():
 		validationClassificationError = []
 		testClassificationError = []
 
+		epochNumber = 0
 		# numIterations is 6000
 		# batchSize is 500
 		# numBatches is 30 (stays constant)
@@ -143,7 +147,7 @@ def neuralNetwork():
 
 			# Shuffle indices once every numBatches (30) iterations
 			if not (i % numBatches): 
-				print(i)
+				# print(i)
 				np.random.shuffle(indices)
 				shuffledTrainingData = trainData[indices]
 				shuffledTrainingTarget = trainTarget[indices]
@@ -158,6 +162,9 @@ def neuralNetwork():
 			sess.run(trainAdam, feed_dict={x0: batchData, y0: batchTarget})
 
 			if ((i+1) % numBatches) == 0:
+				print(i)
+				epochNumber += 1
+
 				trainingLoss.append(sess.run(crossEntropyLoss, feed_dict = {x0: batchData, y0: batchTarget}))
 				validationLoss.append(sess.run(crossEntropyLoss, feed_dict = {x0: validData, y0: validTarget}))
 				testLoss.append(sess.run(crossEntropyLoss, feed_dict = {x0: testData, y0: testTarget}))
@@ -166,6 +173,20 @@ def neuralNetwork():
 				validationClassificationError.append(sess.run(classificationAccuracy, feed_dict = {x0: validData, y0: validTarget}))
 				testClassificationError.append(sess.run(classificationAccuracy, feed_dict = {x0: testData, y0: testTarget}))
 
+				if epochNumber >= 4 and earlyStoppingValidationLoss is -1:
+					fiveValidationLoss = validationLoss[(epochNumber-4): (epochNumber+1)]
+
+					if (sorted(fiveValidationLoss) == fiveValidationLoss):
+						earlyStoppingValidationLoss = epochNumber
+						print("Early stopping epoch number (Validation loss) is ", epochNumber)
+
+				if epochNumber >= 4 and earlyStoppingValidationClassificationError is -1:
+					fiveValidationClassificationError = validationClassificationError[(epochNumber-4) : (epochNumber+1)]
+
+					if (sorted(fiveValidationClassificationError) == fiveValidationClassificationError):
+						earlyStoppingValidationClassificationError = epochNumber
+						print("Early stopping epoch number (Validation Classification Error) is ", epochNumber)
+		
 		trainingLossPerLearningRate.append(trainingLoss)
 		validationLossPerLearningRate.append(validationLoss)
 		testLossPerLearningRate.append(testLoss)
@@ -174,20 +195,11 @@ def neuralNetwork():
 		validationClassificationErrorPerLearningRate.append(validationClassificationError)
 		testClassificationErrorPerLearningRate.append(testClassificationError)
 
+	print(earlyStoppingValidationLoss)
+	print(earlyStoppingValidationClassificationError)
+
 	# Plotting
 	epochs = np.linspace(0, numEpochs, num = numEpochs)
-
-	# Plot loss vs number of epochs
-	figure = plt.figure()
-	axes = plt.gca()
-	plt.plot(epochs, trainingLossPerLearningRate[0], "r-", label = 'Learning rate = 0.005')
-	plt.plot(epochs, trainingLossPerLearningRate[1], "g-", label = 'Learning rate = 0.001')
-	plt.plot(epochs, trainingLossPerLearningRate[2], "y-", label = 'Learning rate = 0.0001')
-	plt.xlabel("Number of epochs")
-	plt.ylabel("Loss")
-	plt.legend(loc='best', shadow = True, fancybox = True)
-	plt.title("Loss per learning rate vs Epochs")    
-	plt.show()
 
     # Plot loss vs number of epochs
 	figure = plt.figure()
@@ -195,18 +207,20 @@ def neuralNetwork():
 	plt.plot(epochs, trainingLossPerLearningRate[0], "r-", label = 'Training Loss')
 	plt.plot(epochs, validationLossPerLearningRate[0], "g-", label = 'Validation Loss')
 	plt.plot(epochs, testLossPerLearningRate[0], "b-", label = 'Test Loss')
+	plt.axvline(x = earlyStoppingValidationLoss, color = "k", linestyle='--', label='Early Stopping Point')
 	plt.xlabel("Number of epochs")
 	plt.ylabel("Loss")
 	plt.legend(loc='best', shadow = True, fancybox = True)
 	plt.title("Training, Validation and Test Loss vs Number of Epochs")    
 	plt.show()
 
-	# Plot classification accuracy vs number of epochs
+	# Plot classification error vs number of epochs
 	figure = plt.figure()
 	axes = plt.gca()
 	plt.plot(epochs, trainingClassificationErrorPerLearningRate[0], "r-", label = 'Training Acc')
 	plt.plot(epochs, validationClassificationErrorPerLearningRate[0], "g-", label = 'Validation Acc')
 	plt.plot(epochs, testClassificationErrorPerLearningRate[0], "b-", label = 'Test Acc')
+	plt.axvline(x = earlyStoppingValidationClassificationError, c = "k", linestyle='--', label='Early Stopping Point')
 	plt.xlabel("Number of epochs")
 	plt.ylabel("Accuracy")
 	plt.legend(loc='best', shadow = True, fancybox = True)
