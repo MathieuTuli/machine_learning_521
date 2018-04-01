@@ -49,7 +49,7 @@ def calculateCrossEntropyLoss(y, yHat, wdc):
 	WOutput = tf.get_default_graph().get_tensor_by_name("outputLayer/Weights:0")
 
 	Ld = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels = tf.one_hot(indices = tf.cast(y, tf.int32), depth = 10, on_value = 1.0, off_value = 0.0, axis = -1), logits = yHat))
-	Lw = (wdc / 2) * tf.reduce_sum(tf.square(WHidden)) * tf.reduce_sum(tf.square(WOutput))
+	Lw = (wdc / 2) * tf.reduce_sum(tf.square(WHidden1)) * tf.reduce_sum(tf.square(WHidden2)) * tf.reduce_sum(tf.square(WOutput))
 	loss = Lw + Ld
 	return loss
 
@@ -71,7 +71,8 @@ def neuralNetwork():
 	# Parameter Declarations
 	numClasses = 10
 	wdc = 3e-4
-	learningRate = 0.0001
+
+	learningRate = 0.005
 	numHiddenUnits = 500
 
 	batchSize = 500
@@ -106,7 +107,7 @@ def neuralNetwork():
 	# This is nothing by the final classification of the image
 	x3 = tf.nn.softmax(sOut)
 	classification = tf.cast(tf.equal(tf.argmax(x3, 1), tf.cast(y0, tf.int64)), tf.float32)
-	classificationAccuracy = tf.reduce_mean(classification) * 100
+	classificationAccuracy = tf.subtract(1.0, tf.reduce_mean(classification)) * 100
 
 	sess.run(tf.global_variables_initializer())
 	trainSaver = tf.train.Saver()

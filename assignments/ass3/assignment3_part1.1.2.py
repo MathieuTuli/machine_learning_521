@@ -70,7 +70,7 @@ def neuralNetwork():
 	# Parameter Declarations
 	numClasses = 10
 	wdc = 3e-4
-	learningRate = 0.007
+	learningRate = 0.005
 	numHiddenUnits = 1000
 
 	batchSize = 500
@@ -90,7 +90,7 @@ def neuralNetwork():
 	shuffledTrainingData = []
 	shuffledTrainingTarget = []
 
-	learningRateArray = [0.005]
+	learningRateArray = [0.005, 0.001, 0.0001]
 	
 	# Record data arrays
 	trainingLossPerLearningRate = []
@@ -174,21 +174,20 @@ def neuralNetwork():
 		validationClassificationErrorPerLearningRate.append(validationClassificationError)
 		testClassificationErrorPerLearningRate.append(testClassificationError)
 
-	print(min(trainingClassificationErrorPerLearningRate[0]))
 	# Plotting
 	epochs = np.linspace(0, numEpochs, num = numEpochs)
 
 	# Plot loss vs number of epochs
-	# figure = plt.figure()
-	# axes = plt.gca()
-	# plt.plot(epochs, trainingLossPerLearningRate[0], "r-", label = 'Learning rate = 0.005')
-	# plt.plot(epochs, trainingLossPerLearningRate[1], "g-", label = 'Learning rate = 0.001')
-	# plt.plot(epochs, trainingLossPerLearningRate[2], "y-", label = 'Learning rate = 0.0001')
-	# plt.xlabel("Number of epochs")
-	# plt.ylabel("Loss")
-	# plt.legend(loc='best', shadow = True, fancybox = True)
-	# plt.title("Loss per learning rate vs Epochs")    
-	# plt.show()
+	figure = plt.figure()
+	axes = plt.gca()
+	plt.plot(epochs, trainingLossPerLearningRate[0], "r-", label = 'Learning rate = 0.005')
+	plt.plot(epochs, trainingLossPerLearningRate[1], "g-", label = 'Learning rate = 0.001')
+	plt.plot(epochs, trainingLossPerLearningRate[2], "y-", label = 'Learning rate = 0.0001')
+	plt.xlabel("Number of epochs")
+	plt.ylabel("Loss")
+	plt.legend(loc='best', shadow = True, fancybox = True)
+	plt.title("Loss per learning rate vs Epochs")    
+	plt.show()
 
     # Plot loss vs number of epochs
 	figure = plt.figure()

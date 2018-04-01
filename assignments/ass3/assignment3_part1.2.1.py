@@ -93,6 +93,7 @@ def neuralNetwork():
 	hiddenUnitsArray = [100, 500, 1000]
 
 	validationLossPerHiddenUnits = []
+	testClassificationErrorPerHiddenUnits = []
 
 	# numIterations is 6000
 	# batchSize is 500
@@ -118,13 +119,13 @@ def neuralNetwork():
 		# This is nothing by the final classification of the image
 		x2 = tf.nn.softmax(sOut)
 		classification = tf.cast(tf.equal(tf.argmax(x2, 1), tf.cast(y0, tf.int64)), tf.float32)
-		classificationAccuracy = tf.reduce_mean(classification) * 100
+		classificationAccuracy = tf.subtract(1.0, tf.reduce_mean(classification)) * 100
 
 		sess.run(tf.global_variables_initializer())
 
 		# Arrays for recording data
 		validationLoss = []
-		testAccuracy = []
+		testClassificationError = []
 
 		for i in range(numIterations):
 
@@ -146,17 +147,18 @@ def neuralNetwork():
 
 			if not startBatchIndex:
 				validationLoss.append(sess.run(crossEntropyLoss, feed_dict = {x0: validData, y0: validTarget}))
-				testAccuracy.append(sess.run(classificationAccuracy, feed_dict = {x0: testData, y0: testTarget}))
+				testClassificationError.append(sess.run(classificationAccuracy, feed_dict = {x0: testData, y0: testTarget}))
 
 		validationLossPerHiddenUnits.append(min(validationLoss))
-
-	print(validationLossPerHiddenUnits)
+		testClassificationErrorPerHiddenUnits.append(min(testClassificationError))
 
 	bestHiddenUnitsIndex = validationLossPerHiddenUnits.index(min(validationLossPerHiddenUnits))
 	bestHiddenUnits = hiddenUnitsArray[bestHiddenUnitsIndex]
 
 	print("Index of best hidden units is ", bestHiddenUnitsIndex)
 	print("Best number of hidden units is ", bestHiddenUnits)
+	print("Validation Loss: ", validationLossPerHiddenUnits)
+	print("Test Classification Error: ", testClassificationErrorPerHiddenUnits)
 
 if __name__ == '__main__':
     print('\n\n\n---------Assignment 3---------\n\n')
