@@ -1,0 +1,434 @@
+*{
+  background: none;//rgba(255, 255, 255, 0);
+}
+h1,h2,h3,h4,h5,h6,a{
+  font-family: 'Fanwood Text', serif;
+}
+p,span,li{
+  font-family: 'Josefin Sans', sans-serif !important;
+}
+p{
+  line-height: 24px;
+}
+.body-font{
+  font-family: 'Josefin Sans', sans-serif !important;
+}
+.skill-date,.skill-location,.skill-title{
+  font-family: 'Josefin Sans', sans-serif !important;
+  display: block;
+}
+.blue-background{
+  height: 200px;
+  width: 100%;
+  background-image: url('../images/iceberg/iceberg_1.svg');
+  background-position: top -140px center;
+  background-size: fit;
+  background-repeat: no-repeat;
+  z-index: 99;
+}
+.name{
+  text-align: left;
+  padding: 5px 0;
+  font-size: 46px;
+}
+.job{
+  text-align: left;
+  padding-bottom: 5px;
+}
+.intro-text{
+  text-align: left;
+  padding: 5px 0 10px 0;
+  @media screen and (min-width: 320px) and (max-width: 1200px){
+    max-width: 600px;
+  }
+  & p,& div{
+    padding-bottom: 20px;
+    line-height: 24px;
+  }
+}
+.resume-padding-left{
+  @media screen and (min-width: 1200px){
+    margin-left: 20px;
+  }
+}
+.resume{
+  & .skills{
+    list-style: none !important;
+    list-style-type: none !important;
+    text-decoration: none;
+    display: block;
+    padding-bottom: 5px;
+    padding-top: 5px;
+    & .skill{
+      padding: 5px 0;
+      text-align: left;
+      display: block;
+      font-weight: bold;
+      & span{
+        padding: 2px 0;
+      }
+    }
+  }
+}
+.skill-date{
+  color: @websiteRed;
+  font-weight: normal;
+}
+.skill-title{
+  font-weight: bold;
+}
+.skill-location{
+  color: grey;
+  font-weight: normal;
+}
+.resume-title{
+  & h4{
+    text-align: left;
+    color: @websiteGreen;
+    font-size: 18px;
+  }
+}
+main{
+  padding-top: 40px;
+}
+#pots{
+  @media screen and (max-width: 1200px){
+    padding-top: 0 !important;
+
+  }
+}
+.work-item{
+  padding: 20px 0;
+  text-decoration: none;
+  @media screen and (min-width: 320px) and (max-width: 1200px){
+    max-width: 600px;
+  }
+  @media screen and (min-width: 1201px) and (max-width:1500px){
+    height: 300px;
+    max-height: 300px;
+    min-height: 300px;
+  }
+  @media screen and (min-width: 1500px){
+    height: 250px;
+    max-height: 250px;
+    min-height: 250px;
+  }
+  &:hover{
+    cursor: pointer;
+    & *, & * *{
+      color: @websiteRed;;
+      transition: 0.2s linear;
+    }
+  }
+  & .title{
+    text-align: left;
+  }
+  & .subtitle{
+    & a{
+      text-decoration: none;
+      &:hover{
+        cursor: pointer;
+      }
+    }
+    text-align: left;
+  }
+  & .description{
+    text-align: left;
+    padding: 10px 0;
+  }
+}
+#graduate{
+  font-weight:bold;
+  color: @websiteRed;
+}
+.no-bottom-padding{
+  padding-bottom: 0 !important;
+}
+.no-top-padding{
+  padding-top: 0 !important;
+}
+.padding-top{
+  padding-top: 30px !important;
+}
+.high-z{
+  z-index: 100 !important;
+}
+.low-z{
+  z-index: -100 !important;
+}
+#courses{
+  color: black;
+  border: 2px solid black;
+  border-radius: 40px;
+  padding: 2px 10px;
+  z-index: 9 !important;
+  &:hover{
+    cursor: pointer;
+    transition: 0.2s linear;
+    background-color: @websiteRed;
+    border: 2px solid @websiteRed;
+    .courses-list{
+      display: block !important;
+    }
+    & +.courses-list{
+      display: block;
+    }
+  }
+}
+.courses-list{
+  display: none;
+  background: white;
+  z-index: 99;
+  position: absolute;
+  margin-left: 70px;
+  box-shadow: 0px 0px 20px black;
+  border: 2px solid black;
+  border-radius: 5px;
+  padding: 5px;
+}
+.iceberg{
+  padding: 0 !important;
+  max-height: 400px !important;
+  z-index: -1 !important;
+  & div{
+    z-index: -1 !important;
+    padding: 0 !important;
+    max-height: 400px !important;
+    & img{
+      z-index: -1 !important;
+      margin-top: -200px;
+      @media screen and (min-width: 2450){
+        margin-top: -350px;
+      }
+      @media screen and (min-width: 1701px) and (max-width: 2449){
+        margin-top: -300px;
+      }
+      @media screen and (min-width: 1501px) and (max-width: 1700px){
+        margin-top: -200px;
+      }
+      @media screen and (min-width: 1201px) and (max-width: 1500px){
+        margin-top: -200px;
+      }
+      @media screen and (min-width: 1000px) and (max-width: 1200px){
+        margin-top: -150px;
+      }
+      @media screen and (min-width: 800px) and (max-width: 999px){
+        margin-top: -80px;
+      }
+      @media screen and (min-width: 300px) and (max-width: 799){
+        margin-top: -20px;
+      }
+      width: 100%;
+    }
+  }
+}
+
+.resume-doc{
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 40px;
+  text-decoration: none;
+  border: 2px solid @websiteRed;
+  background: @websiteRed;
+  z-index: 9999999 !important;
+  &:hover{
+    transition: 0.2s linear;
+    cursor: pointer;
+    border: 2px solid black;
+    background: none;
+  }
+}
+.header{
+  text-align: left;
+}
+#workPlaceholder{
+  z-index: 99999999 !important;
+}
+
+.work-item-detailed{
+  padding: 20px 0;
+  & .title{
+    text-align: left;
+    & *{
+      color: @websiteGreen !important;
+    }
+  }
+  & .subtitle{
+    text-align: left;
+    & *{
+      display: inline-block;
+      font-family: 'Fanwood Text', serif !important;
+    }
+    & a{
+      font-size: 24px;
+      text-decoration: none;
+      font-weight: bold;
+      border-bottom: 5px solid @websiteRed;
+      &:hover{
+        color: @websiteRed;
+        transition: 0.2s linear;
+        border-color: white;
+      }
+    }
+  }
+  & .description{
+    text-align: left;
+    padding: 10px 0;
+    & p, & ul,& ol{
+      padding: 10px 0;
+    }
+  }
+}
+
+.back-button{
+  text-align: left;
+  padding-bottom: 10px;
+  & h4{
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 40px;
+    border: 2px solid @websiteRed;
+    background: @websiteRed;
+    z-index: 9999999 !important;
+    &:hover{
+      transition: 0.2s linear;
+      cursor: pointer;
+      border: 2px solid black;
+      background: none;
+    }
+  }
+}
+
+.description-list{
+  margin-left: 50px;
+  & li{
+    padding: 2px 0;
+  }
+}
+
+.description-header{
+  padding: 10px 0;
+  margin: 20px 0;
+  font-weight: bold;
+  border-top: 1px solid @websiteGreen;
+  border-bottom: 1px solid @websiteGreen;
+}
+
+.timeline{
+  // border-left: 2px solid black;
+  border-width: 2px;
+  border-style: solid;
+  border-right: none;
+  border-top: none;
+  border-bottom: none;
+  border-image: linear-gradient(to bottom, black, rgba(0, 0, 0, 0)) 1 100%;
+
+  margin-top: 30px;
+  margin-left: 2px;
+}
+
+.timeline-element{
+  padding-top: 16px;
+}
+.timeline-spacer{
+  height: 35px;
+}
+
+
+.circle{
+  height: 10px;
+  width: 10px;
+  border: 2px solid @websiteRed;
+  border-radius: 100%;
+  margin-left: -5.75px;
+  position: absolute;
+  background-color: @websiteRed;
+}
+
+.timeline-title{
+  text-align: left;
+  margin-left: 10px;
+}
+
+.timeline-content{
+  text-align: left;
+  margin-left: 40px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  & li{
+    text-align: left;
+    padding-left: 40px;
+    text-indent: -14px;
+    &::before{
+      content: "• ";
+      color: @websiteRed;
+    }
+  }
+}
+.timeline-link{
+  &:hover{
+    transition: 0.2s linear;
+    color: @websiteRed;
+  }
+}
+
+.passions{
+  & h5{
+    text-align: left;
+    font-size: 18px;
+  }
+}
+
+.projects-title{
+  &>h4{
+    color: @websiteGreen;
+    font-size: 18px;
+    text-align: left;
+  }
+}
+
+.no-padding-top-bottom{
+  padding-top: 0px !important;
+  padding-bottom: 0px !important;
+}
+.first-project{
+  padding-top: 5px !important;
+}
+.code-snippets-title{
+  &>h4{
+    color: @websiteGreen;
+    font-size: 18px;
+    text-align: left;
+  }
+}
+.projects{
+  text-align: left;
+  &>h4{
+    }
+}
+
+.code-snippets{
+  text-align: left;
+  &>div>h4{
+    font-weight: normal !important;
+    &:hover{
+      cursor: pointer;
+    }
+  }
+}
+code {
+    background-color:#eee;
+    padding: 5px;
+    font-family:Helvetica, Arial, sans-serif !important;
+}
+pre {
+    font-family:Helvetica, Arial, sans-serif !important;
+    background-color:#eee;
+    padding: 5px;
+    white-space:pre-wrap;
+    white-space:-moz-pre-wrap;
+    white-space:-pre-wrap;
+    white-space:-o-pre-wrap;
+    word-wrap:break-word;
+}

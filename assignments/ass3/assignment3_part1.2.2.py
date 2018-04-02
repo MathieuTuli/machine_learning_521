@@ -41,7 +41,7 @@ def calculateCrossEntropyLoss(y, yHat, wdc):
 	    wdc (lambda) is the weight decay coefficient
 	    WHidden/Woutput are the weights for hidden/output later respectively
 	    Cross Entropy Loss = Ld + Lw
-	''' 
+	'''
 
 	WHidden1 = tf.get_default_graph().get_tensor_by_name("hiddenLayer1/Weights:0")
 	WHidden2 = tf.get_default_graph().get_tensor_by_name("hiddenLayer2/Weights:0")
@@ -133,7 +133,7 @@ def neuralNetwork():
 	for i in range(numIterations):
 
 		# Shuffle indices once every numBatches (30) iterations
-		# if not (i % numBatches): 
+		# if not (i % numBatches):
 		# 	print(i)
 		# 	np.random.shuffle(indices)
 		shuffledTrainingData = trainData[indices]
@@ -176,7 +176,7 @@ def neuralNetwork():
 	plt.xlabel("Number of epochs")
 	plt.ylabel("Loss")
 	plt.legend(loc='best', shadow = True, fancybox = True)
-	plt.title("Training and Validation Loss vs Number of Epochs")    
+	plt.title("Training and Validation Loss vs Number of Epochs")
 	plt.show()
 
 	# Plot loss vs number of epochs
@@ -187,7 +187,7 @@ def neuralNetwork():
 	plt.xlabel("Number of epochs")
 	plt.ylabel("Classification Error (%)")
 	plt.legend(loc='best', shadow = True, fancybox = True)
-	plt.title("Training and Validation Accuracy vs Number of Epochs")    
+	plt.title("Training and Validation Accuracy vs Number of Epochs")
 	plt.show()
 
 if __name__ == '__main__':
