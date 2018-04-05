@@ -102,8 +102,20 @@ def neuralNetwork():
     testClassificationErrorPerLearningRate = []
     dropoutRates = [1, 0.5]
 
+
+    index = -1
     for dropoutRate in dropoutRates:
+        print("\nDROPOUT:"+str(dropoutRate))
+        # Record data arrays
+        trainingLossPerLearningRate = []
+        validationLossPerLearningRate = []
+        testLossPerLearningRate = []
+
+        trainingClassificationErrorPerLearningRate = []
+        validationClassificationErrorPerLearningRate = []
+        testClassificationErrorPerLearningRate = []
         for rate in learningRateArray:
+            index += 1
             learningRate = rate
 
             # x1 is output of first layer (and input to output later)
@@ -170,6 +182,23 @@ def neuralNetwork():
                     validationClassificationError.append(sess.run(classificationAccuracy, feed_dict = {x0: validData, y0: validTarget}))
                     testClassificationError.append(sess.run(classificationAccuracy, feed_dict = {x0: testData, y0: testTarget}))
 
+                    # Early stopping point calculation
+        			# i.e check if any 5 consecutive points (for validation loss/classification error)
+        			# in the epoch are in ascending order
+        			# if epochNumber >= 5 and earlyStoppingValidationLoss is -1:
+        			# 	fiveValidationLoss = validationLoss[(epochNumber-5): (epochNumber)]
+                    #
+        			# 	if (sorted(fiveValidationLoss) == fiveValidationLoss):
+        			# 		earlyStoppingValidationLoss = epochNumber
+        			# 		print("Early stopping epoch number (Validation loss) is ", epochNumber)
+                    #
+        			# if epochNumber >= 5 and earlyStoppingValidationClassificationError is -1:
+        			# 	fiveValidationClassificationError = validationClassificationError[(epochNumber-5) : (epochNumber)]
+                    #
+        			# 	if (sorted(fiveValidationClassificationError) == fiveValidationClassificationError):
+        			# 		earlyStoppingValidationClassificationError = epochNumber
+        			# 		print("Early stopping epoch number (Validation Classification Error) is ", epochNumber)
+
             print(min(testLoss))
             print(min(testClassificationError))
 
@@ -182,45 +211,45 @@ def neuralNetwork():
             testClassificationErrorPerLearningRate.append(testClassificationError)
 
 
+        print("DROP:"+str(dropoutRate))
+        # Plotting
+        epochs = np.linspace(0, numEpochs, num = numEpochs)
 
-    # Plotting
-    epochs = np.linspace(0, numEpochs, num = numEpochs)
+        # Plot loss vs number of epochs
+        figure = plt.figure()
+        axes = plt.gca()
+        plt.plot(epochs, trainingLossPerLearningRate[0], "r-", label = 'Learning rate = 0.005')
+        plt.plot(epochs, trainingLossPerLearningRate[1], "g-", label = 'Learning rate = 0.001')
+        plt.plot(epochs, trainingLossPerLearningRate[2], "y-", label = 'Learning rate = 0.0001')
+        plt.xlabel("Number of epochs")
+        plt.ylabel("Loss")
+        plt.legend(loc='best', shadow = True, fancybox = True)
+        plt.title("Loss per learning rate vs Epochs")
+        plt.show()
 
-    # Plot loss vs number of epochs
-    figure = plt.figure()
-    axes = plt.gca()
-    plt.plot(epochs, trainingLossPerLearningRate[0], "r-", label = 'Learning rate = 0.005')
-    plt.plot(epochs, trainingLossPerLearningRate[1], "g-", label = 'Learning rate = 0.001')
-    plt.plot(epochs, trainingLossPerLearningRate[2], "y-", label = 'Learning rate = 0.0001')
-    plt.xlabel("Number of epochs")
-    plt.ylabel("Loss")
-    plt.legend(loc='best', shadow = True, fancybox = True)
-    plt.title("Loss per learning rate vs Epochs")
-    plt.show()
+        # Plot loss vs number of epochs
+        figure = plt.figure()
+        axes = plt.gca()
+        plt.plot(epochs, trainingLossPerLearningRate[0], "r-", label = 'Training Loss')
+        plt.plot(epochs, validationLossPerLearningRate[0], "g-", label = 'Validation Loss')
+        plt.plot(epochs, testLossPerLearningRate[0], "b-", label = 'Test Loss')
+        plt.xlabel("Number of epochs")
+        plt.ylabel("Loss")
+        plt.legend(loc='best', shadow = True, fancybox = True)
+        plt.title("Training, Validation and Test Loss vs Number of Epochs")
+        plt.show()
 
-    # Plot loss vs number of epochs
-    figure = plt.figure()
-    axes = plt.gca()
-    plt.plot(epochs, trainingLossPerLearningRate[0], "r-", label = 'Training Loss')
-    plt.plot(epochs, validationLossPerLearningRate[0], "g-", label = 'Validation Loss')
-    plt.plot(epochs, testLossPerLearningRate[0], "b-", label = 'Test Loss')
-    plt.xlabel("Number of epochs")
-    plt.ylabel("Loss")
-    plt.legend(loc='best', shadow = True, fancybox = True)
-    plt.title("Training, Validation and Test Loss vs Number of Epochs")
-    plt.show()
-
-    # Plot classification accuracy vs number of epochs
-    figure = plt.figure()
-    axes = plt.gca()
-    plt.plot(epochs, trainingClassificationErrorPerLearningRate[0], "r-", label = 'Training Classification Error')
-    plt.plot(epochs, validationClassificationErrorPerLearningRate[0], "g-", label = 'Validation Classification Error')
-    plt.plot(epochs, testClassificationErrorPerLearningRate[0], "b-", label = 'Test Classification Error')
-    plt.xlabel("Number of epochs")
-    plt.ylabel("Classification Error (%)")
-    plt.legend(loc='best', shadow = True, fancybox = True)
-    plt.title("Training, Validation and Test Classification Error vs Number of Epochs")
-    plt.show()
+        # Plot classification accuracy vs number of epochs
+        figure = plt.figure()
+        axes = plt.gca()
+        plt.plot(epochs, trainingClassificationErrorPerLearningRate[0], "r-", label = 'Training Classification Error')
+        plt.plot(epochs, validationClassificationErrorPerLearningRate[0], "g-", label = 'Validation Classification Error')
+        plt.plot(epochs, testClassificationErrorPerLearningRate[0], "b-", label = 'Test Classification Error')
+        plt.xlabel("Number of epochs")
+        plt.ylabel("Classification Error (%)")
+        plt.legend(loc='best', shadow = True, fancybox = True)
+        plt.title("Training, Validation and Test Classification Error vs Number of Epochs")
+        plt.show()
 
 if __name__ == '__main__':
     print('\n\n\n---------Assignment 3---------\n\n')

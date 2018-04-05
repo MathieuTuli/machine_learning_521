@@ -86,6 +86,7 @@ def neuralNetwork():
     y0 = tf.placeholder(dtype = tf.int32, shape = [None], name = "Target")
 
     for dropoutRate in dropoutRates:
+        print("\nDROPOUT:"+str(dropoutRate))
         # x1 is output of first layer (and input to output later)
         with tf.variable_scope("hiddenLayer"):
             x1 = tf.nn.relu(build_layer(x0, numHiddenUnits))
@@ -150,7 +151,7 @@ def neuralNetwork():
 
             sess.run(trainAdam, feed_dict={x0: batchData, y0: batchTarget})
 
-            if(i % int(numIterations / 4) == 0 and i != 0):
+            if(i == int(numIterations/4)):
                 weights = tf.get_default_graph().get_tensor_by_name("hiddenLayer/Weights:0")
                 weights = tf.reshape(weights, [28, 28, 1000])
                 weights = sess.run(weights)
@@ -159,16 +160,16 @@ def neuralNetwork():
 
                 for j in range(10):
                     for k in range(10):
-                        axes[j, k].imshow(weights[:, :, 10*j+k], cmap = plot.cm.gray, aspect = 'equal')
+                        axes[j, k].imshow(weights[:, :, 10*j+k], cmap = plt.cm.gray, aspect = 'equal')
                         axes[j, k].get_xaxis().set_visible(False)
                         axes[j, k].get_yaxis().set_visible(False)
 
-                f.savefig("1_3_2_dropout_"+str(dropoutRates[dropoutRate])+"_"+str(checkpoint*25 + 25)+"%.png")
+                fig.savefig("1_3_2_dropout_"+str(dropoutRate)+"_25%.png")
                 checkpoint += 1
 
             # For every epoch, get data
             if ((i+1) % numBatches) == 0:
-                print(i)
+                # print(i)
                 epochNumber += 1
 
                 trainingLoss.append(sess.run(crossEntropyLoss, feed_dict = {x0: batchData, y0: batchTarget}))
@@ -195,57 +196,56 @@ def neuralNetwork():
                     if (sorted(fiveValidationClassificationError) == fiveValidationClassificationError):
                         earlyStoppingValidationClassificationError = epochNumber
                         print("Early stopping epoch number (Validation Classification Error) is ", epochNumber)
+        #one more
+        weights = tf.get_default_graph().get_tensor_by_name("hiddenLayer/Weights:0")
+        weights = tf.reshape(weights, [28, 28, 1000])
+        weights = sess.run(weights)
 
-    print(earlyStoppingValidationLoss)
-    print(earlyStoppingValidationClassificationError)
+        fig, axes = plt.subplots(10, 10, sharex='col', sharey='row')
 
-    print("Training classification error at ESP", trainingClassificationError[earlyStoppingValidationClassificationError])
-    print("Validation classification error at ESP", validationClassificationError[earlyStoppingValidationClassificationError])
-    print("Test classification error at ESP", testClassificationError[earlyStoppingValidationClassificationError])
+        for j in range(10):
+            for k in range(10):
+                axes[j, k].imshow(weights[:, :, 10*j+k], cmap = plt.cm.gray, aspect = 'equal')
+                axes[j, k].get_xaxis().set_visible(False)
+                axes[j, k].get_yaxis().set_visible(False)
 
-    # Plotting
-    epochs = np.linspace(0, numEpochs, num = numEpochs)
+        fig.savefig("1_3_2_dropout_"+str(dropoutRate)+"_100%.png")
 
-    # Plot loss vs number of epochs
-    figure = plt.figure()
-    axes = plt.gca()
-    plt.plot(epochs, trainingLoss, "r-", label = 'Training Loss')
-    plt.plot(epochs, validationLoss, "g-", label = 'Validation Loss')
-    plt.plot(epochs, testLoss, "b-", label = 'Test Loss')
-    plt.axvline(x = earlyStoppingValidationLoss, color = "k", linestyle='--', label='Early Stopping Point')
-    plt.xlabel("Number of epochs")
-    plt.ylabel("Loss")
-    plt.legend(loc='best', shadow = True, fancybox = True)
-    plt.title("Training, Validation and Test Loss vs Number of Epochs")
-    plt.show()
-
-    # Plot classification error vs number of epochs
-    figure = plt.figure()
-    axes = plt.gca()
-    plt.plot(epochs, trainingClassificationError, "r-", label = 'Training Classification Error')
-    plt.plot(epochs, validationClassificationError, "g-", label = 'Validation Classification Error')
-    plt.plot(epochs, testClassificationError, "b-", label = 'Test Classification Error')
-    plt.axvline(x = earlyStoppingValidationClassificationError, c = "k", linestyle='--', label='Early Stopping Point')
-    plt.xlabel("Number of epochs")
-    plt.ylabel("Classification Error (%)")
-    plt.legend(loc='best', shadow = True, fancybox = True)
-    plt.title("Training, Validation and Test Classification Error vs Number of Epochs")
-    plt.show()
-
-    #one more
-    weights = tf.get_default_graph().get_tensor_by_name("hiddenLayer/Weights:0")
-    weights = tf.reshape(weights, [28, 28, 1000])
-    weights = sess.run(weights)
-
-    fig, axes = plt.subplots(10, 10, sharex='col', sharey='row')
-
-    for j in range(10):
-        for k in range(10):
-            axes[j, k].imshow(weights[:, :, 10*j+k], cmap = plot.cm.gray, aspect = 'equal')
-            axes[j, k].get_xaxis().set_visible(False)
-            axes[j, k].get_yaxis().set_visible(False)
-
-    f.savefig("1_3_2_dropout_"+str(dropoutRates[dropoutRate])+"_"+str(checkpoint*25 + 25)+"%.png")
+    # print(earlyStoppingValidationLoss)
+    # print(earlyStoppingValidationClassificationError)
+    #
+    # print("Training classification error at ESP", trainingClassificationError[earlyStoppingValidationClassificationError])
+    # print("Validation classification error at ESP", validationClassificationError[earlyStoppingValidationClassificationError])
+    # print("Test classification error at ESP", testClassificationError[earlyStoppingValidationClassificationError])
+    #
+    # # Plotting
+    # epochs = np.linspace(0, numEpochs, num = numEpochs)
+    #
+    # # Plot loss vs number of epochs
+    # figure = plt.figure()
+    # axes = plt.gca()
+    # plt.plot(epochs, trainingLoss, "r-", label = 'Training Loss')
+    # plt.plot(epochs, validationLoss, "g-", label = 'Validation Loss')
+    # plt.plot(epochs, testLoss, "b-", label = 'Test Loss')
+    # plt.axvline(x = earlyStoppingValidationLoss, color = "k", linestyle='--', label='Early Stopping Point')
+    # plt.xlabel("Number of epochs")
+    # plt.ylabel("Loss")
+    # plt.legend(loc='best', shadow = True, fancybox = True)
+    # plt.title("Training, Validation and Test Loss vs Number of Epochs")
+    # plt.show()
+    #
+    # # Plot classification error vs number of epochs
+    # figure = plt.figure()
+    # axes = plt.gca()
+    # plt.plot(epochs, trainingClassificationError, "r-", label = 'Training Classification Error')
+    # plt.plot(epochs, validationClassificationError, "g-", label = 'Validation Classification Error')
+    # plt.plot(epochs, testClassificationError, "b-", label = 'Test Classification Error')
+    # plt.axvline(x = earlyStoppingValidationClassificationError, c = "k", linestyle='--', label='Early Stopping Point')
+    # plt.xlabel("Number of epochs")
+    # plt.ylabel("Classification Error (%)")
+    # plt.legend(loc='best', shadow = True, fancybox = True)
+    # plt.title("Training, Validation and Test Classification Error vs Number of Epochs")
+    # plt.show()
 
 if __name__ == '__main__':
     print('\n\n\n---------Assignment 3---------\n\n')
