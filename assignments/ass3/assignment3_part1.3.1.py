@@ -89,7 +89,7 @@ def neuralNetwork():
     shuffledTrainingData = []
     shuffledTrainingTarget = []
 
-    learningRateArray = [0.005, 0.001, 0.0001]
+    learningRateArray = [0.005]
 
 
     # Record data arrays
@@ -100,12 +100,12 @@ def neuralNetwork():
     trainingClassificationErrorPerLearningRate = []
     validationClassificationErrorPerLearningRate = []
     testClassificationErrorPerLearningRate = []
-    dropoutRates = [1, 0.5]
+    dropoutRates = [0, 0.5]
 
 
     index = -1
     for dropoutRate in dropoutRates:
-        print("\nDROPOUT:"+str(dropoutRate))
+        print("\nDROPOUT:"+str(1 - dropoutRate))
         # Record data arrays
         trainingLossPerLearningRate = []
         validationLossPerLearningRate = []
@@ -121,7 +121,7 @@ def neuralNetwork():
             # x1 is output of first layer (and input to output later)
             with tf.variable_scope("hiddenLayer"):
                 x1 = tf.nn.relu(build_layer(x0, numHiddenUnits))
-                x1 = tf.nn.dropout(x1, dropoutRate)
+                x1 = tf.nn.dropout(x1, 1 - dropoutRate)
 
             # sOut is the weighted sum of the output layer which will be fed into softmax
             with tf.variable_scope("outputLayer"):
@@ -167,8 +167,8 @@ def neuralNetwork():
                 endBatchIndex = startBatchIndex + batchSize
 
                 # Obtain a batch of training data from start index to end index
-                batchData = shuffledTrainingData[startBatchIndex : endBatchIndex]
-                batchTarget = shuffledTrainingTarget[startBatchIndex : endBatchIndex]
+                batchData = trainData[startBatchIndex : endBatchIndex]
+                batchTarget = trainTarget[startBatchIndex : endBatchIndex]
 
                 sess.run(trainAdam, feed_dict={x0: batchData, y0: batchTarget})
 
@@ -211,7 +211,7 @@ def neuralNetwork():
             testClassificationErrorPerLearningRate.append(testClassificationError)
 
 
-        print("DROP:"+str(dropoutRate))
+        print("DROP:"+str( 1 - dropoutRate))
         # Plotting
         epochs = np.linspace(0, numEpochs, num = numEpochs)
 
@@ -219,8 +219,6 @@ def neuralNetwork():
         figure = plt.figure()
         axes = plt.gca()
         plt.plot(epochs, trainingLossPerLearningRate[0], "r-", label = 'Learning rate = 0.005')
-        plt.plot(epochs, trainingLossPerLearningRate[1], "g-", label = 'Learning rate = 0.001')
-        plt.plot(epochs, trainingLossPerLearningRate[2], "y-", label = 'Learning rate = 0.0001')
         plt.xlabel("Number of epochs")
         plt.ylabel("Loss")
         plt.legend(loc='best', shadow = True, fancybox = True)
@@ -244,7 +242,6 @@ def neuralNetwork():
         axes = plt.gca()
         plt.plot(epochs, trainingClassificationErrorPerLearningRate[0], "r-", label = 'Training Classification Error')
         plt.plot(epochs, validationClassificationErrorPerLearningRate[0], "g-", label = 'Validation Classification Error')
-        plt.plot(epochs, testClassificationErrorPerLearningRate[0], "b-", label = 'Test Classification Error')
         plt.xlabel("Number of epochs")
         plt.ylabel("Classification Error (%)")
         plt.legend(loc='best', shadow = True, fancybox = True)

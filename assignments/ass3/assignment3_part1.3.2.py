@@ -33,7 +33,7 @@ def build_layer(inputTensor, numHiddenUnits):
 
     # Output of the function
     weightedSum = tf.matmul(inputTensor, W) + b
-    return weightedSum
+    return weightedSum, W
 
 def calculateCrossEntropyLoss(y, yHat, wdc):
     ''' y is the target,
@@ -71,7 +71,7 @@ def neuralNetwork():
     wdc = 3e-4
     learningRate = 0.005
     numHiddenUnits = 1000
-    dropoutRates = [1, 0.5]
+    dropoutRates = [0, 0.5]
 
     batchSize = 500
     numIterations = 6000
@@ -86,15 +86,16 @@ def neuralNetwork():
     y0 = tf.placeholder(dtype = tf.int32, shape = [None], name = "Target")
 
     for dropoutRate in dropoutRates:
-        print("\nDROPOUT:"+str(dropoutRate))
+        print("\nDROPOUT:"+str(1 - dropoutRate))
         # x1 is output of first layer (and input to output later)
         with tf.variable_scope("hiddenLayer"):
-            x1 = tf.nn.relu(build_layer(x0, numHiddenUnits))
-            x1 = tf.nn.dropout(x1, dropoutRate)
+            x1, hW = build_layer(x0, numHiddenUnits)
+            x1 = tf.nn.relu(x1)
+            x1 = tf.nn.dropout(x1, 1 - dropoutRate)
 
         # sOut is the weighted sum of the output layer which will be fed into softmax
         with tf.variable_scope("outputLayer"):
-            sOut = build_layer(x1, numClasses)
+            sOut, sW = build_layer(x1, numClasses)
 
         # Setup optimizer
         crossEntropyLoss = calculateCrossEntropyLoss(y0, sOut, wdc)
@@ -152,19 +153,20 @@ def neuralNetwork():
             sess.run(trainAdam, feed_dict={x0: batchData, y0: batchTarget})
 
             if(i == int(numIterations/4)):
-                weights = tf.get_default_graph().get_tensor_by_name("hiddenLayer/Weights:0")
-                weights = tf.reshape(weights, [28, 28, 1000])
-                weights = sess.run(weights)
+                # weights = tf.get_default_graph().get_tensor_by_name("hiddenLayer/Weights:0")
+                # possibleIndices = tf.range(0, 100, 1)
+                weights = tf.reshape(hW, [28, 28, 1000])
+                weights = weights.eval(session = sess)
 
                 fig, axes = plt.subplots(10, 10, sharex='col', sharey='row')
 
                 for j in range(10):
                     for k in range(10):
-                        axes[j, k].imshow(weights[:, :, 10*j+k], cmap = plt.cm.gray, aspect = 'equal')
-                        axes[j, k].get_xaxis().set_visible(False)
+                        axes[j, k].imshow(weights[:, :, 10*j + k], cmap = plt.cm.gray, aspect = 'equal')
                         axes[j, k].get_yaxis().set_visible(False)
+                        axes[j, k].get_xaxis().set_visible(False)
 
-                fig.savefig("1_3_2_dropout_"+str(dropoutRate)+"_25%.png")
+                fig.savefig("1_3_2_dropout_"+str(1 - dropoutRate)+"_25%.png")
                 checkpoint += 1
 
             # For every epoch, get data
@@ -183,23 +185,23 @@ def neuralNetwork():
                 # Early stopping point calculation
                 # i.e check if any 5 consecutive points (for validation loss/classification error)
                 # in the epoch are in ascending order
-                if epochNumber >= 5 and earlyStoppingValidationLoss is -1:
-                    fiveValidationLoss = validationLoss[(epochNumber-5): (epochNumber)]
-
-                    if (sorted(fiveValidationLoss) == fiveValidationLoss):
-                        earlyStoppingValidationLoss = epochNumber
-                        print("Early stopping epoch number (Validation loss) is ", epochNumber)
-
-                if epochNumber >= 5 and earlyStoppingValidationClassificationError is -1:
-                    fiveValidationClassificationError = validationClassificationError[(epochNumber-5) : (epochNumber)]
-
-                    if (sorted(fiveValidationClassificationError) == fiveValidationClassificationError):
-                        earlyStoppingValidationClassificationError = epochNumber
-                        print("Early stopping epoch number (Validation Classification Error) is ", epochNumber)
+                # if epochNumber >= 5 and earlyStoppingValidationLoss is -1:
+                #     fiveValidationLoss = validationLoss[(epochNumber-5): (epochNumber)]
+                #
+                #     if (sorted(fiveValidationLoss) == fiveValidationLoss):
+                #         earlyStoppingValidationLoss = epochNumber
+                #         print("Early stopping epoch number (Validation loss) is ", epochNumber)
+                #
+                # if epochNumber >= 5 and earlyStoppingValidationClassificationError is -1:
+                #     fiveValidationClassificationError = validationClassificationError[(epochNumber-5) : (epochNumber)]
+                #
+                #     if (sorted(fiveValidationClassificationError) == fiveValidationClassificationError):
+                #         earlyStoppingValidationClassificationError = epochNumber
+                #         print("Early stopping epoch number (Validation Classification Error) is ", epochNumber)
         #one more
-        weights = tf.get_default_graph().get_tensor_by_name("hiddenLayer/Weights:0")
-        weights = tf.reshape(weights, [28, 28, 1000])
-        weights = sess.run(weights)
+        # weights = tf.get_default_graph().get_tensor_by_name("hiddenLayer/Weights:0")
+        weights = tf.reshape(hW, [28, 28, 1000])
+        weights =  weights.eval(session = sess)
 
         fig, axes = plt.subplots(10, 10, sharex='col', sharey='row')
 
@@ -209,7 +211,7 @@ def neuralNetwork():
                 axes[j, k].get_xaxis().set_visible(False)
                 axes[j, k].get_yaxis().set_visible(False)
 
-        fig.savefig("1_3_2_dropout_"+str(dropoutRate)+"_100%.png")
+        fig.savefig("1_3_2_dropout_"+str(1 - dropoutRate)+"_100%.png")
 
     # print(earlyStoppingValidationLoss)
     # print(earlyStoppingValidationClassificationError)

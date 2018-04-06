@@ -41,7 +41,7 @@ def calculateCrossEntropyLoss(y, yHat, wdc):
 	    wdc (lambda) is the weight decay coefficient
 	    WHidden/Woutput are the weights for hidden/output later respectively
 	    Cross Entropy Loss = Ld + Lw
-	''' 
+	'''
 
 	WHidden = tf.get_default_graph().get_tensor_by_name("hiddenLayer/Weights:0")
 	WOutput = tf.get_default_graph().get_tensor_by_name("outputLayer/Weights:0")
@@ -89,8 +89,8 @@ def neuralNetwork():
 	shuffledTrainingData = []
 	shuffledTrainingTarget = []
 
-	learningRateArray = [0.005, 0.001, 0.0001]
-	
+	learningRateArray = [0.005]
+
 	# Record data arrays
 	trainingLossPerLearningRate = []
 	validationLossPerLearningRate = []
@@ -141,7 +141,7 @@ def neuralNetwork():
 		for i in range(numIterations):
 
 			# Shuffle indices once every numBatches (30) iterations
-			# if not (i % numBatches): 
+			# if not (i % numBatches):
 			# 	print(i)
 			# 	np.random.shuffle(indices)
 			shuffledTrainingData = trainData[indices]
@@ -151,8 +151,8 @@ def neuralNetwork():
 			endBatchIndex = startBatchIndex + batchSize
 
 			# Obtain a batch of training data from start index to end index
-			batchData = shuffledTrainingData[startBatchIndex : endBatchIndex]
-			batchTarget = shuffledTrainingTarget[startBatchIndex : endBatchIndex]
+			batchData = trainData[startBatchIndex : endBatchIndex]
+			batchTarget = trainTarget[startBatchIndex : endBatchIndex]
 
 			sess.run(trainAdam, feed_dict={x0: batchData, y0: batchTarget})
 
@@ -190,7 +190,7 @@ def neuralNetwork():
 	plt.xlabel("Number of epochs")
 	plt.ylabel("Loss")
 	plt.legend(loc='best', shadow = True, fancybox = True)
-	plt.title("Loss per learning rate vs Epochs")    
+	plt.title("Loss per learning rate vs Epochs")
 	plt.show()
 
     # Plot loss vs number of epochs
@@ -202,7 +202,7 @@ def neuralNetwork():
 	plt.xlabel("Number of epochs")
 	plt.ylabel("Loss")
 	plt.legend(loc='best', shadow = True, fancybox = True)
-	plt.title("Training, Validation and Test Loss vs Number of Epochs")    
+	plt.title("Training, Validation and Test Loss vs Number of Epochs")
 	plt.show()
 
 	# Plot classification accuracy vs number of epochs
@@ -214,7 +214,7 @@ def neuralNetwork():
 	plt.xlabel("Number of epochs")
 	plt.ylabel("Classification Error (%)")
 	plt.legend(loc='best', shadow = True, fancybox = True)
-	plt.title("Training, Validation and Test Classification Error vs Number of Epochs")    
+	plt.title("Training, Validation and Test Classification Error vs Number of Epochs")
 	plt.show()
 
 if __name__ == '__main__':
